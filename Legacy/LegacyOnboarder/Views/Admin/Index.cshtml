@@ -1,0 +1,209 @@
+﻿@model IEnumerable<LegacyOnboarder.Models.RequestRecord>
+
+@{
+    ViewData["Title"] = "Admin - Legacy Onboarder";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Employee Requests</h2>
+        <button id="btn-new-employee" class="btn btn-primary">
+            New Employee
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.Message as string))
+    {
+        <div class="alert alert-success">@ViewBag.Message</div>
+    }
+
+    <table class="table table-striped table-sm" id="requestsTable">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>First</th>
+                <th>Last</th>
+                <th>Dept</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Start</th>
+                <th>Termination</th>
+                <th>Rehire</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            <tr data-request-id="@r.Id"
+                data-first-name="@r.EmployeeFirstName"
+                data-last-name="@r.EmployeeLastName"
+                data-department="@r.DepartmentId"
+                data-title="@r.TitleId"
+                data-custom-title="@r.TitleDescription"
+                data-employee-type="@r.EmployeeTypeId"
+                data-supervisor="@r.HiringManagerId"
+                data-start-date="@r.StartDate"
+                data-termination-date="@r.TerminationDate"
+                data-rehire="@r.Rehire">
+                <td>@r.Id</td>
+                <td>@r.EmployeeFirstName</td>
+                <td>@r.EmployeeLastName</td>
+                <td>@r.DepartmentId</td>
+                <td>@(string.IsNullOrEmpty(r.TitleDescription) ? r.TitleId.ToString() : r.TitleDescription)</td>
+                <td>@r.RequestStatus</td>
+                <td>@r.StartDate</td>
+                <td>@r.TerminationDate</td>
+                <td>@(r.Rehire ? "Yes" : "No")</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary btn-edit-request">
+                        Edit
+                    </button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<!-- New Employee Modal -->
+<div class="modal fade" id="modal-new-employee" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            @using (Html.BeginForm("SaveEmployee", "Admin", FormMethod.Post, new { id = "employeeForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" id="request-id" name="requestID" value="0" />
+
+                <div class="modal-header">
+                    <span class="modal-title" id="employeeModalTitle">New Employee</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="first-name">First Name <span>*</span></label>
+                            <input type="text" id="first-name" name="firstName" class="form-control" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="last-name">Last Name <span>*</span></label>
+                            <input type="text" id="last-name" name="lastName" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <label for="department">Department <span>*</span></label>
+                            <select id="department" name="department" class="form-control selectpicker">
+                                <option value="">Select</option>
+                                <option value="1">IT</option>
+                                <option value="2">HR</option>
+                                <option value="3">Finance</option>
+                                <option value="4">Operations</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <label for="title">Title <span>*</span></label>
+                            <select id="title" name="title" class="form-control selectpicker">
+                                <option value="">Select</option>
+                                <option value="1">Developer</option>
+                                <option value="2">Analyst</option>
+                                <option value="3">Manager</option>
+                                <option value="-1">Other...</option>
+                            </select>
+
+                            <input type="text"
+                                   id="customTitleInput"
+                                   name="customTitle"
+                                   class="form-control mt-2"
+                                   placeholder="Enter custom title"
+                                   style="display:none;" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <label for="employee-type">Employee Type <span>*</span></label>
+                            <select id="employee-type" name="employeeType" class="form-control selectpicker">
+                                <option value="">Select</option>
+                                <option value="1">Full-time</option>
+                                <option value="2">Contractor</option>
+                                <option value="3">Intern</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <label for="supervisor">Hiring Manager <span>*</span></label>
+                            <select id="supervisor" name="supervisor" class="form-control selectpicker">
+                                <option value="">Select</option>
+                                <option value="101">Alice Admin</option>
+                                <option value="102">Bob Boss</option>
+                                <option value="103">Carol Chief</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <label for="start-date">Start Date</label>
+                            <input type="date" id="start-date" name="startDate" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <label for="termination-date">Termination Date</label>
+                            <input type="date" id="termination-date" name="terminationDate" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="form-group">
+                            <input type="checkbox" id="rehire" name="rehire" class="form-check-input" />
+                            <label class="form-check-label" for="rehire">Rehire</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-secondary me-3"
+                                type="submit"
+                                name="submit"
+                                value="cancel">
+                            Cancel
+                        </button>
+
+                        <button id="saveCloseButton"
+                                class="btn btn-outline-primary me-2"
+                                type="submit"
+                                name="submit"
+                                value="add-save">
+                            Save &amp; Close
+                        </button>
+
+                        <button id="saveSendButton"
+                                class="btn btn-primary"
+                                type="submit"
+                                name="submit"
+                                value="add-send">
+                            Save &amp; Send
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
