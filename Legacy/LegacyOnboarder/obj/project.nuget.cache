@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hdnuLZT7toY=",
+  "dgSpecHash": "hdIi9txMUCo=",
   "success": true,
-  "projectFilePath": "/home/kamilpopardowski/repos/personal/Onboarder/Legacy/LegacyOnboarder/LegacyOnboarder.csproj",
+  "projectFilePath": "/home/kamilpopardowski/repos/personal/onboarder-modernization/Legacy/LegacyOnboarder/LegacyOnboarder.csproj",
   "expectedPackageFiles": [
     "/home/kamilpopardowski/.nuget/packages/azure.core/1.38.0/azure.core.1.38.0.nupkg.sha512",
     "/home/kamilpopardowski/.nuget/packages/azure.identity/1.11.4/azure.identity.1.11.4.nupkg.sha512",
