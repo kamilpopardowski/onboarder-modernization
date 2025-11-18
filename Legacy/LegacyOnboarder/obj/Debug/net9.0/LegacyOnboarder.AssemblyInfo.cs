@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LegacyOnboarder")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c220f29d6753ae5eee86c72ead62458fa6dd97b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("LegacyOnboarder")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LegacyOnboarder")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

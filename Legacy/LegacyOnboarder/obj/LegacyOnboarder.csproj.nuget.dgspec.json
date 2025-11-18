@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/kamilpopardowski/repos/personal/Onboarder/Legacy/LegacyOnboarder/LegacyOnboarder.csproj": {}
+    "/home/kamilpopardowski/repos/personal/onboarder-modernization/Legacy/LegacyOnboarder/LegacyOnboarder.csproj": {}
   },
   "projects": {
-    "/home/kamilpopardowski/repos/personal/Onboarder/Legacy/LegacyOnboarder/LegacyOnboarder.csproj": {
+    "/home/kamilpopardowski/repos/personal/onboarder-modernization/Legacy/LegacyOnboarder/LegacyOnboarder.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/kamilpopardowski/repos/personal/Onboarder/Legacy/LegacyOnboarder/LegacyOnboarder.csproj",
+        "projectUniqueName": "/home/kamilpopardowski/repos/personal/onboarder-modernization/Legacy/LegacyOnboarder/LegacyOnboarder.csproj",
         "projectName": "LegacyOnboarder",
-        "projectPath": "/home/kamilpopardowski/repos/personal/Onboarder/Legacy/LegacyOnboarder/LegacyOnboarder.csproj",
+        "projectPath": "/home/kamilpopardowski/repos/personal/onboarder-modernization/Legacy/LegacyOnboarder/LegacyOnboarder.csproj",
         "packagesPath": "/home/kamilpopardowski/.nuget/packages/",
-        "outputPath": "/home/kamilpopardowski/repos/personal/Onboarder/Legacy/LegacyOnboarder/obj/",
+        "outputPath": "/home/kamilpopardowski/repos/personal/onboarder-modernization/Legacy/LegacyOnboarder/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/kamilpopardowski/.nuget/NuGet/NuGet.Config"
