@@ -11,6 +11,6 @@ namespace LegacyOnboarder.Models
         }
         
         public DbSet<RequestRecord> Requests { get; set; }
-        public DbSet<ProvisioningTask> ProvisioningTasks { get; set; }
+        public DbSet<RequestTask> ProvisioningTasks { get; set; }
     }
 }
