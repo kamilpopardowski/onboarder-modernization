@@ -386,4 +386,48 @@ public class AdminController : Controller
             _db.SaveChanges();
         }
     }
+    
+    [HttpGet]
+    public IActionResult Tasks(int id)
+    {
+        var request = _db.Requests.FirstOrDefault(r => r.Id == id);
+        if (request == null)
+            return NotFound();
+
+        var tasks = _db.ProvisioningTasks
+            .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
+            .OrderBy(t => t.Id)
+            .ToList();
+
+        ViewBag.Request = request;
+        return View(tasks);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SaveTasks(int requestId, List<int> taskId, List<string?> assignedToUser, List<string?> status)
+    {
+        // super bad binding: parallel arrays
+        for (int i = 0; i < taskId.Count; i++)
+        {
+            var id = taskId[i];
+            var task = _db.ProvisioningTasks.FirstOrDefault(t => t.Id == id);
+            if (task == null) continue;
+
+            task.AssignedToUser = string.IsNullOrWhiteSpace(assignedToUser[i])
+                ? null
+                : assignedToUser[i];
+
+            // Done is Success, anything else Pending
+            var s = (status[i] ?? "").ToLower();
+            task.Status = s == "done" ? ProvisioningStatus.Success : ProvisioningStatus.Pending;
+            task.CompletedAt = task.Status == ProvisioningStatus.Success
+                ? DateTime.UtcNow
+                : null;
+        }
+
+        _db.SaveChanges();
+
+        return RedirectToAction("Tasks", new { id = requestId });
+    }
 }
