@@ -20,8 +20,8 @@ This repository simulates a common real-world scenario:
 
 This repo contains **both sides**:
 
-- `legacy/` — intentionally bad, but realistic, ASP.NET Core MVC app.
-- `modern/` — planned modern implementation using Blazor, API layer, EF Core migrations, and cloud integration.
+- `legacy/` - intentionally bad, but realistic, ASP.NET Core MVC app.
+- `modern/` - planned modern implementation using Blazor, API layer, EF Core migrations, and cloud integration.
 
 ---
 
