@@ -40,10 +40,31 @@ $(document).ready(function () {
         updateDateVisibility();
     }
 
-    // When type is changed manually
+    var tableSelector = '#requests-table';
+
     $('#request-type').on('change', function () {
         updateDateVisibility();
+
+        var selected = $(this).val(); // "false" or "true"
+        var wantOffboarding = (selected === 'true');
+
+        $(tableSelector + ' tbody tr').each(function () {
+            var isOff = $(this).attr('data-is-offboarding'); // "True" / "False"
+            if (isOff) isOff = isOff.toString().toLowerCase();
+
+            var rowIsOff = (isOff === 'true');
+
+            if (wantOffboarding) {
+                // show only offboarding
+                $(this).toggle(rowIsOff);
+            } else {
+                // show only onboarding
+                $(this).toggle(!rowIsOff);
+            }
+        });
     });
+
+    $('#request-type').trigger('change');
 
     // "New Employee" button
     $('#btn-new-employee').on('click', function () {
@@ -52,7 +73,7 @@ $(document).ready(function () {
     });
 
     // Edit existing request
-    $('#requestsTable').on('click', '.btn-edit-request', function () {
+    $('#requests-table').on('click', '.btn-edit-request', function () {
         var $row = $(this).closest('tr');
 
         $('#request-id').val($row.data('request-id'));
