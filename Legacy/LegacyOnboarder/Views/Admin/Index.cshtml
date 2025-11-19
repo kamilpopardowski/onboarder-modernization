@@ -34,8 +34,7 @@
         <thead>
             <tr>
                 <th>Id</th>
-                <th>First</th>
-                <th>Last</th>
+                <th>Employee</th>
                 <th>Dept</th>
                 <th>Title</th>
                 <th>Status</th>
@@ -62,8 +61,11 @@
                 data-rehire="@r.Rehire"
                 data-is-offboarding="@string.IsNullOrEmpty(r.StartDate)">
                 <td>@r.Id</td>
-                <td>@r.EmployeeFirstName</td>
-                <td>@r.EmployeeLastName</td>
+                <td>
+                    <a href="@Url.Action("Tasks", "Admin", new { id = r.Id })">
+                        @r.EmployeeFirstName @r.EmployeeLastName
+                    </a>
+                </td>
                 <td>@r.DepartmentId</td>
                 <td>@(string.IsNullOrEmpty(r.TitleDescription) ? r.TitleId.ToString() : r.TitleDescription)</td>
                 <td>@r.RequestStatus</td>
