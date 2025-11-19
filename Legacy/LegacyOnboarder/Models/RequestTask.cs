@@ -40,6 +40,8 @@ namespace LegacyOnboarder.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedAt { get; set; }
+        
+        public int? DepartmenId { get; set; }
 
         public bool IsOffboarding { get; set; }       // true = termination
         public bool IsTemplate { get; set; }          // true = row is default workflow

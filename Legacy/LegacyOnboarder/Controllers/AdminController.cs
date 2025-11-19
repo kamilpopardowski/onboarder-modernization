@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using LegacyOnboarder.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 
 namespace LegacyOnboarder.Controllers;
@@ -28,7 +29,51 @@ public class AdminController : Controller
         
         EnsureDefaultWorkflow(_db);
 
+        PopulateViewBag();
+
+        foreach (var r in requests)
+        {
+            if (string.IsNullOrEmpty(r.TitleDescription))
+            {
+                r.TitleDescription = ((List<SelectListItem>)ViewBag.Titles)?.FirstOrDefault(t => int.Parse(t.Value) == r.Id)?.Text;
+            }
+            
+            r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
+        }
+        
         return View(requests);
+    }
+
+    private void PopulateViewBag()
+    {
+        // LOOKUP LISTS
+        ViewBag.Departments = _db.Departments
+            .OrderBy(d => d.DepartmentName)
+            .Select(d => new SelectListItem
+            {
+                Value = d.Id.ToString(),
+                Text  = d.DepartmentName
+            })
+            .ToList();
+
+        ViewBag.Titles = _db.Titles
+            .OrderBy(t => t.Name)
+            .Select(t => new SelectListItem
+            {
+                Value = t.Id.ToString(),
+                Text  = t.Name
+            })
+            .ToList();
+
+        ViewBag.Employees = _db.Employees
+            .OrderBy(e => e.EmployeeLastName)
+            .ThenBy(e => e.EmployeeFirstName)
+            .Select(e => new SelectListItem
+            {
+                Value = e.Id.ToString(),
+                Text  = e.EmployeeFirstName + " " + e.EmployeeLastName
+            })
+            .ToList();
     }
     
     private void EnsureDefaultWorkflow(AppDbContext db)
@@ -95,7 +140,7 @@ public class AdminController : Controller
         string lastName,
         int department,
         int title,
-        int employeeType,
+        EmployeeType employeeType,
         int supervisor,
         bool isOffboarding,
         string? rehire = null,
@@ -113,8 +158,8 @@ public class AdminController : Controller
             EmployeeFirstName = firstName,
             EmployeeLastName = lastName,
             DepartmentId = department,
-            EmployeeTypeId = employeeType,
-            HiringManagerId = supervisor,
+            EmployeeType = employeeType,
+            ProcessManagerId = supervisor,
             StartDate = startDate,
             TerminationDate = terminationDate,
             TitleId = title,
@@ -191,8 +236,8 @@ public class AdminController : Controller
             existing.EmployeeFirstName = employerRequest.EmployeeFirstName;
             existing.EmployeeLastName = employerRequest.EmployeeLastName;
             existing.DepartmentId = employerRequest.DepartmentId;
-            existing.EmployeeTypeId = employerRequest.EmployeeTypeId;
-            existing.HiringManagerId = employerRequest.HiringManagerId;
+            existing.EmployeeType = employerRequest.EmployeeType;
+            existing.ProcessManagerId = employerRequest.ProcessManagerId;
             existing.StartDate = employerRequest.StartDate;
             existing.TerminationDate = employerRequest.TerminationDate;
             existing.TitleId = employerRequest.TitleId;
@@ -223,7 +268,7 @@ public class AdminController : Controller
         if (requestIdForTasks == 0 && existing != null)
             requestIdForTasks = existing.Id;
 
-// only create tasks on brand new requests (not edits) – or do whatever you want
+        // only create tasks on brand new requests (not edits) – or do whatever you want
         if (!isEditing)
         {
             CreateChecklistTasksForRequest(requestIdForTasks, isOffboarding);
@@ -393,13 +438,14 @@ public class AdminController : Controller
         var request = _db.Requests.FirstOrDefault(r => r.Id == id);
         if (request == null)
             return NotFound();
-
+        
         var tasks = _db.ProvisioningTasks
             .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
             .OrderBy(t => t.Id)
             .ToList();
 
         ViewBag.Request = request;
+        PopulateViewBag();
         return View(tasks);
     }
 
