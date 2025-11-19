@@ -44,14 +44,33 @@ $(document).ready(function () {
         $('#employee-type').val($row.data('employee-type'));
         $('#supervisor').val($row.data('supervisor'));
 
-        var startDate = $row.data('start-date');
+        var startDate       = $row.data('start-date');
         var terminationDate = $row.data('termination-date');
-        var customTitle = $row.data('custom-title');
-        var rehire = $row.data('rehire');
+        var customTitle     = $row.data('custom-title');
+        var rehireRaw       = $row.data('rehire');
+        var isOffboardingRaw = $row.data('is-offboarding');
 
         $('#start-date').val(startDate || '');
         $('#termination-date').val(terminationDate || '');
-        $('#rehire').prop('checked', !!rehire);
+
+        // --- Rehire checkbox: handle "True"/"False", 1/0, true/false ---
+        var rehireBool =
+            rehireRaw === true ||
+            String(rehireRaw).toLowerCase() === 'true' ||
+            rehireRaw === 1 ||
+            rehireRaw === '1';
+
+        $('#rehire').prop('checked', rehireBool);
+
+        // --- Request type (onboarding/offboarding) select ---
+        var isOffboardingBool =
+            isOffboardingRaw === true ||
+            String(isOffboardingRaw).toLowerCase() === 'true' ||
+            isOffboardingRaw === 1 ||
+            isOffboardingRaw === '1';
+
+        // our <select> has option values "false" / "true"
+        $('#request-type').val(isOffboardingBool ? 'true' : 'false');
 
         if (customTitle && customTitle.length > 0) {
             $('#customTitleInput').val(customTitle).show();
@@ -60,10 +79,12 @@ $(document).ready(function () {
             $('#customTitleInput').val('').hide();
         }
 
-        $('#employeeModalTitle').text('Edit Employee Request #' + $row.data('request-id'));
+        $('#employeeModalTitle')
+            .text('Edit Employee Request #' + $row.data('request-id'));
 
         getEmployeeModal().show();
     });
+
 
     $('#title').on('change', function () {
         var value = $(this).val();
