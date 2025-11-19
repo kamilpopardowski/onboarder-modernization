@@ -60,7 +60,7 @@
                 data-start-date="@r.StartDate"
                 data-termination-date="@r.TerminationDate"
                 data-rehire="@r.Rehire"
-                data-is-offboarding="@r.IsOffboarding">
+                data-is-offboarding="@string.IsNullOrEmpty(r.StartDate)">
                 <td>@r.Id</td>
                 <td>@r.EmployeeFirstName</td>
                 <td>@r.EmployeeLastName</td>
@@ -70,12 +70,12 @@
                 <td>@r.StartDate</td>
                 <td>@r.TerminationDate</td>
                 <td>@(r.Rehire ? "Yes" : "No")</td>
+                <td>@(string.IsNullOrEmpty(r.StartDate) ? "Offboarding" : "Onboarding")</td>
                 <td>
                     <button class="btn btn-sm btn-secondary btn-edit-request">
                         Edit
                     </button>
                 </td>
-                <td>@(r.IsOffboarding ? "Offboarding" : "Onboarding")</td>
             </tr>
         }
         </tbody>
@@ -166,19 +166,22 @@
                         </div>
                     </div>
 
-                    <div class="row mt-3">
+                    <div class="row mt-3 start-date-row">
                         <div class="form-group">
-                            <label for="start-date">Start Date</label>
-                            <input type="date" id="start-date" name="startDate" class="form-control" />
+                            <label for="start-date">Start Date <span>*</span></label>
+                            <input type="date" id="start-date" name="startDate"
+                                   class="form-control" />
                         </div>
                     </div>
 
-                    <div class="row mt-3">
+                    <div class="row mt-3 termination-date-row">
                         <div class="form-group">
                             <label for="termination-date">Termination Date</label>
-                            <input type="date" id="termination-date" name="terminationDate" class="form-control" />
+                            <input type="date" id="termination-date" name="terminationDate"
+                                   class="form-control" />
                         </div>
                     </div>
+
 
                     <div class="row mt-3">
                         <div class="form-group">

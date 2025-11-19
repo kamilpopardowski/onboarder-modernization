@@ -1,9 +1,7 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// One giant jQuery file, handling everything, forever.
+﻿// One giant jQuery file, handling everything, forever.
 
 $(document).ready(function () {
+
     function getEmployeeModal() {
         var modalElement = document.getElementById('modal-new-employee');
         var modal = bootstrap.Modal.getInstance(modalElement);
@@ -11,6 +9,15 @@ $(document).ready(function () {
             modal = new bootstrap.Modal(modalElement);
         }
         return modal;
+    }
+
+    // show/hide start vs termination date - on/off boarding
+    function updateDateVisibility() {
+        var isOff = $('#request-type').val() === 'true';
+
+        // show start date, hide termination date
+        $('.start-date-row').toggle(!isOff);
+        $('.termination-date-row').toggle(isOff);
     }
 
     function clearEmployeeForm() {
@@ -25,14 +32,26 @@ $(document).ready(function () {
         $('#start-date').val('');
         $('#termination-date').val('');
         $('#rehire').prop('checked', false);
+
+        // default: onboarding
+        //$('#request-type').val('false');
         $('#employeeModalTitle').text('New Employee');
+
+        updateDateVisibility();
     }
 
+    // When type is changed manually
+    $('#request-type').on('change', function () {
+        updateDateVisibility();
+    });
+
+    // "New Employee" button
     $('#btn-new-employee').on('click', function () {
         clearEmployeeForm();
         getEmployeeModal().show();
     });
 
+    // Edit existing request
     $('#requestsTable').on('click', '.btn-edit-request', function () {
         var $row = $(this).closest('tr');
 
@@ -44,16 +63,16 @@ $(document).ready(function () {
         $('#employee-type').val($row.data('employee-type'));
         $('#supervisor').val($row.data('supervisor'));
 
-        var startDate       = $row.data('start-date');
-        var terminationDate = $row.data('termination-date');
-        var customTitle     = $row.data('custom-title');
-        var rehireRaw       = $row.data('rehire');
+        var startDate        = $row.data('start-date');
+        var terminationDate  = $row.data('termination-date');
+        var customTitle      = $row.data('custom-title');
+        var rehireRaw        = $row.data('rehire');
         var isOffboardingRaw = $row.data('is-offboarding');
 
         $('#start-date').val(startDate || '');
         $('#termination-date').val(terminationDate || '');
 
-        // --- Rehire checkbox: handle "True"/"False", 1/0, true/false ---
+        // Rehire checkbox
         var rehireBool =
             rehireRaw === true ||
             String(rehireRaw).toLowerCase() === 'true' ||
@@ -62,14 +81,13 @@ $(document).ready(function () {
 
         $('#rehire').prop('checked', rehireBool);
 
-        // --- Request type (onboarding/offboarding) select ---
+        // Request type select
         var isOffboardingBool =
             isOffboardingRaw === true ||
             String(isOffboardingRaw).toLowerCase() === 'true' ||
             isOffboardingRaw === 1 ||
             isOffboardingRaw === '1';
 
-        // our <select> has option values "false" / "true"
         $('#request-type').val(isOffboardingBool ? 'true' : 'false');
 
         if (customTitle && customTitle.length > 0) {
@@ -82,10 +100,11 @@ $(document).ready(function () {
         $('#employeeModalTitle')
             .text('Edit Employee Request #' + $row.data('request-id'));
 
+        updateDateVisibility(); // make date rows match request type
         getEmployeeModal().show();
     });
 
-
+    // Custom title
     $('#title').on('change', function () {
         var value = $(this).val();
         if (value === '-1') {
@@ -95,6 +114,7 @@ $(document).ready(function () {
         }
     });
 
+    // Debug log if both dates set
     $('#start-date, #termination-date').on('change', function () {
         var start = $('#start-date').val();
         var end = $('#termination-date').val();
@@ -104,10 +124,12 @@ $(document).ready(function () {
         }
     });
 
+    // Log which button submitted the form
     $('#employeeForm').on('submit', function () {
         console.log('Submitting employee form with submit=' +
             $(document.activeElement).attr('value'));
     });
 
+    // Initial state if modal gets opened somehow on page load
+    updateDateVisibility();
 });
-

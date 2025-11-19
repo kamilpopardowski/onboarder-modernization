@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using LegacyOnboarder.Models;
+using Microsoft.Extensions.Logging;
 
 namespace LegacyOnboarder.Controllers;
 
@@ -144,6 +148,7 @@ public class AdminController : Controller
             existing.Rehire            = employerRequest.Rehire;
             existing.RequestStatus     = employerRequest.RequestStatus;
             existing.IsEditing         = employerRequest.IsEditing;
+            existing.IsOffboarding     = employerRequest.IsOffboarding;
         }
         else
         {
