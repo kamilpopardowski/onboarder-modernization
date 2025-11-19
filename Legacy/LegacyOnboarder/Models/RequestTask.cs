@@ -16,7 +16,7 @@ namespace LegacyOnboarder.Models
         Checklist    = 1
     }
 
-    public class ProvisioningTask
+    public class RequestTask
     {
         public int Id { get; set; }
 
