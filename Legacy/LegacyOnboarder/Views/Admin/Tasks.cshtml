@@ -6,7 +6,7 @@
 <h2>Checklist tasks for @request.EmployeeFirstName @request.EmployeeLastName</h2>
 
 <form asp-action="SaveTasks" method="post">
-    <input type="hidden" name="requestId" value="@request.Id" />
+    <input type="hidden" name="requestId" value="@request.Id"/>
 
     <table class="table table-sm">
         <thead>
@@ -23,18 +23,24 @@
             <tr>
                 <td>
                     @t.DisplayName
-                    <input type="hidden" name="taskId" value="@t.Id" />
+                    <input type="hidden" name="taskId" value="@t.Id"/>
                 </td>
                 <td>
                     <input type="text"
                            name="assignedToUser"
                            class="form-control form-control-sm"
-                           value="@t.AssignedToUser" />
+                           value="@t.AssignedToUser"/>
                 </td>
                 <td>
                     <select name="status" class="form-control form-control-sm">
-                        <option value="pending" @(t.Status == ProvisioningStatus.Pending ? "selected" : "")>Pending</option>
-                        <option value="done" @(t.Status == ProvisioningStatus.Success ? "selected" : "")>Done</option>
+                        <option value="pending"
+                                selected="@(t.Status == ProvisioningStatus.Pending ? "selected" : null)">
+                            Pending
+                        </option>
+                        <option value="done"
+                                selected="@(t.Status == ProvisioningStatus.Success ? "selected" : null)">
+                            Done
+                        </option>
                     </select>
                 </td>
             </tr>
