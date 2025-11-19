@@ -2,13 +2,6 @@ using System;
 
 namespace LegacyOnboarder.Models
 {
-    // public enum RequestStatus
-    // {
-    //     Submitted,
-    //     OnHold,
-    //     Deleted
-    // }
-
     // This pretends to be a DB entity + DTO + view-model all at once 🤮
     public class RequestRecord
     {
@@ -32,5 +25,6 @@ namespace LegacyOnboarder.Models
         public RequestStatus RequestStatus { get; set; }
 
         public bool IsEditing { get; set; }
+        public bool IsOffboarding { get; set; }
     }
 }

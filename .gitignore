@@ -319,6 +319,9 @@ node_modules/
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
 
+# Rider
+**/.idea/
+
 # Paket dependency manager
 .paket/paket.exe
 paket-files/

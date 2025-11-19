@@ -25,12 +25,6 @@ public class AdminController : Controller
         return View(requests);
     }
 
-
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
@@ -48,6 +42,7 @@ public class AdminController : Controller
         int title,
         int employeeType,
         int supervisor,
+        bool isOffboarding, 
         string? rehire = null,
         string? startDate = null,
         string? terminationDate = null,
@@ -70,7 +65,8 @@ public class AdminController : Controller
             TitleDescription  = customTitle,
             Rehire            = rehire != null && rehire.ToLower() == "on",
             RequestStatus     = RequestStatus.Submitted,
-            IsEditing         = isEditing
+            IsEditing         = isEditing,
+            IsOffboarding     = isOffboarding
         };
 
         // inline validation & helpers
@@ -155,6 +151,28 @@ public class AdminController : Controller
         }
 
         _db.SaveChanges();
+        
+        var requestIdForTasks = existing?.Id ?? employerRequest.Id;
+
+        if (requestIdForTasks == 0)
+        {
+            // refresh from DB in case identity was generated
+            requestIdForTasks = _db.Requests
+                .OrderByDescending(r => r.Id)
+                .Select(r => r.Id)
+                .FirstOrDefault();
+        }
+
+        // create tasks only if we actually submitted or put on hold (not deleted)
+        if (employerRequest.RequestStatus != RequestStatus.Deleted)
+        {
+            var tasks = employerRequest.IsOffboarding
+                ? BuildOffboardingTasks(requestIdForTasks)
+                : BuildOnboardingTasks(requestIdForTasks);
+
+            _db.ProvisioningTasks.AddRange(tasks);
+            _db.SaveChanges();
+        }
 
         // ViewBag message lottery
         if (isCancel)
@@ -187,4 +205,89 @@ public class AdminController : Controller
         var pattern = @"^\d{4}-\d{2}-\d{2}$";
         return Regex.IsMatch(date, pattern);
     }
+    
+    private List<ProvisioningTask> BuildOnboardingTasks(int requestId)
+{
+    return new List<ProvisioningTask>
+    {
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "IT_CreateAdAccount",
+            AssignedToRole  = "IT",
+            IsOffboarding   = false
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "IT_CreateEmailAccount",
+            AssignedToRole  = "IT",
+            IsOffboarding   = false
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "IT_ProvisionLaptop",
+            AssignedToRole  = "IT",
+            IsOffboarding   = false
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "HR_WelcomeEmail",
+            AssignedToRole  = "HR",
+            IsOffboarding   = false
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "MANAGER_IntroMeeting",
+            AssignedToRole  = "Manager",
+            IsOffboarding   = false
+        }
+    };
+}
+
+private List<ProvisioningTask> BuildOffboardingTasks(int requestId)
+{
+    return new List<ProvisioningTask>
+    {
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "IT_DisableAdAccount",
+            AssignedToRole  = "IT",
+            IsOffboarding   = true
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "IT_DisableEmail",
+            AssignedToRole  = "IT",
+            IsOffboarding   = true
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "SECURITY_DeactivateBadge",
+            AssignedToRole  = "Security",
+            IsOffboarding   = true
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "HR_ExitInterview",
+            AssignedToRole  = "HR",
+            IsOffboarding   = true
+        },
+        new ProvisioningTask
+        {
+            RequestRecordId = requestId,
+            TaskType        = "MANAGER_ResponsibilityTransfer",
+            AssignedToRole  = "Manager",
+            IsOffboarding   = true
+        }
+    };
+}
+
 }
