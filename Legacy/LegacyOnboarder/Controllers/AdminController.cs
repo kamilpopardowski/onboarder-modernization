@@ -213,11 +213,6 @@ public class AdminController : Controller
             _logger.LogWarning("Invalid employee/request data: {@EmployerRequest}", employerRequest);
             ViewBag.Error = "The employee request is invalid. Please fix the fields and try again.";
 
-            // reload list for Index view, entity == view model
-            var invalidList = _db.Requests
-                .OrderByDescending(r => r.Id)
-                .ToList();
-
             return BuildIndexView();
         }
 
@@ -283,14 +278,12 @@ public class AdminController : Controller
         if (requestIdForTasks == 0 && existing != null)
             requestIdForTasks = existing.Id;
 
-        // only create tasks on brand new requests (not edits) – or do whatever you want
+        // only create tasks on brand new requests 
         if (!isEditing)
         {
             CreateChecklistTasksForRequest(requestIdForTasks, isOffboarding);
         }
-
-
-        // create tasks only if we actually submitted or put on hold (not deleted)
+        
         if (employerRequest.RequestStatus != RequestStatus.Deleted)
         {
             var tasks = employerRequest.IsOffboarding
@@ -318,11 +311,6 @@ public class AdminController : Controller
                 ? "Request saved."
                 : "Request submitted.";
         }
-
-        // Reload list for Index
-        var list = _db.Requests
-            .OrderByDescending(r => r.Id)
-            .ToList();
 
         return BuildIndexView();
     }
