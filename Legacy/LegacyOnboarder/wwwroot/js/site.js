@@ -111,11 +111,34 @@ $(document).ready(function () {
 
         $('#request-type').val(isOffboardingBool ? 'true' : 'false');
 
-        if (customTitle && customTitle.length > 0) {
-            $('#customTitleInput').val(customTitle).show();
-            $('#title').val('-1'); // "Other"
+        // if (customTitle && customTitle.length > 0) {
+        //     $('#customTitleInput').val(customTitle).show();
+        //     $('#title').val('-1'); // "Other"
+        // } else {
+        //     $('#customTitleInput').val('').hide();
+        // }
+
+        var titleIdRaw = $row.data('title-id');
+        var customTitleRaw = $row.data('custom-title');
+
+        var titleId = titleIdRaw ? parseInt(titleIdRaw) : 0;
+        var hasCustom = customTitleRaw && customTitleRaw.length > 0;
+
+        // Matching TitleId from the dropdown
+        var titleMatches = false;
+        if (titleId > 0) {
+            if ($("#title option[value='" + titleId + "']").length > 0) {
+                $("#title").val(titleId);
+                titleMatches = true;
+            }
+        }
+
+        // TitleId didn’t match any option then use custom title
+        if (!titleMatches && hasCustom) {
+            $("#title").val("-1"); // “Other”
+            $("#customTitleInput").val(customTitleRaw).show();
         } else {
-            $('#customTitleInput').val('').hide();
+            $("#customTitleInput").hide().val("");
         }
 
         $('#employeeModalTitle')

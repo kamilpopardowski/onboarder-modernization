@@ -35,7 +35,7 @@ public class AdminController : Controller
         {
             if (string.IsNullOrEmpty(r.TitleDescription))
             {
-                r.TitleDescription = ((List<SelectListItem>)ViewBag.Titles)?.FirstOrDefault(t => int.Parse(t.Value) == r.Id)?.Text;
+                r.TitleName = ((List<SelectListItem>)ViewBag.Titles)?.FirstOrDefault(t => int.Parse(t.Value) == r.TitleId)?.Text;
             }
             
             r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
@@ -162,8 +162,8 @@ public class AdminController : Controller
             ProcessManagerId = supervisor,
             StartDate = startDate,
             TerminationDate = terminationDate,
-            TitleId = title,
-            TitleDescription = customTitle,
+            TitleId = title == -1 ? null : title,
+            TitleDescription = title == -1 ? customTitle : null,
             Rehire = rehire != null && rehire.ToLower() == "on",
             RequestStatus = RequestStatus.Submitted,
             IsEditing = isEditing,
@@ -240,8 +240,8 @@ public class AdminController : Controller
             existing.ProcessManagerId = employerRequest.ProcessManagerId;
             existing.StartDate = employerRequest.StartDate;
             existing.TerminationDate = employerRequest.TerminationDate;
-            existing.TitleId = employerRequest.TitleId;
-            existing.TitleDescription = employerRequest.TitleDescription;
+            existing.TitleId = employerRequest.TitleId == -1 ? null : employerRequest.TitleId;
+            existing.TitleDescription = employerRequest.TitleId == -1 ? employerRequest.TitleDescription : null;
             existing.Rehire = employerRequest.Rehire;
             existing.RequestStatus = employerRequest.RequestStatus;
             existing.IsEditing = employerRequest.IsEditing;

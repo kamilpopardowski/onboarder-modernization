@@ -32,18 +32,18 @@
     </div>
     <table class="table table-striped table-sm" id="requests-table">
         <thead>
-            <tr>
-                <th>Id</th>
-                <th>Employee</th>
-                <th>Dept</th>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Start</th>
-                <th>Termination</th>
-                <th>Rehire</th>
-                <th>Request Type</th>
-                <th></th>
-            </tr>
+        <tr>
+            <th>Id</th>
+            <th>Employee</th>
+            <th>Dept</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Start</th>
+            <th>Termination</th>
+            <th>Rehire</th>
+            <th>Request Type</th>
+            <th></th>
+        </tr>
         </thead>
         <tbody>
         @foreach (var r in Model)
@@ -51,11 +51,11 @@
             <tr data-request-id="@r.Id"
                 data-first-name="@r.EmployeeFirstName"
                 data-last-name="@r.EmployeeLastName"
-                data-department="@r.DepartmentName"
-                data-title="@r.TitleDescription"
+                data-department="@r.DepartmentId"
+                data-title-id="@r.TitleId"
                 data-custom-title="@r.TitleDescription"
-                data-employee-type="@r.EmployeeType"
-                data-supervisor="@r.ProcessManagerName"
+                data-employee-type="@((int)r.EmployeeType)"
+                data-supervisor="@r.ProcessManagerId"
                 data-start-date="@r.StartDate"
                 data-termination-date="@r.TerminationDate"
                 data-rehire="@r.Rehire"
@@ -67,7 +67,7 @@
                     </a>
                 </td>
                 <td>@r.DepartmentName</td>
-                <td>@(string.IsNullOrEmpty(r.TitleDescription) ? r.TitleId.ToString() : r.TitleDescription)</td>
+                <td>@(r.TitleDescription ?? r.TitleName ?? "(Unknown)")</td>
                 <td>@r.RequestStatus</td>
                 <td>@r.StartDate</td>
                 <td>@r.TerminationDate</td>
@@ -92,7 +92,7 @@
             {
                 @Html.AntiForgeryToken()
 
-                <input type="hidden" id="request-id" name="requestID" value="0" />
+                <input type="hidden" id="request-id" name="requestID" value="0"/>
 
                 <div class="modal-header">
                     <span class="modal-title" id="employeeModalTitle">New Employee</span>
@@ -103,11 +103,11 @@
                     <div class="row">
                         <div class="form-group col-md-6">
                             <label for="first-name">First Name <span>*</span></label>
-                            <input type="text" id="first-name" name="firstName" class="form-control" />
+                            <input type="text" id="first-name" name="firstName" class="form-control"/>
                         </div>
                         <div class="form-group col-md-6">
                             <label for="last-name">Last Name <span>*</span></label>
-                            <input type="text" id="last-name" name="lastName" class="form-control" />
+                            <input type="text" id="last-name" name="lastName" class="form-control"/>
                         </div>
                     </div>
 
@@ -126,7 +126,7 @@
                         <div class="form-group">
                             <label for="title">Title <span>*</span></label>
                             <select id="title" name="title" class="form-control selectpicker"
-                                asp-items="@(ViewBag.Titles as List<SelectListItem>)">
+                                    asp-items="@(ViewBag.Titles as List<SelectListItem>)">
                                 <option value="">-- Select Title --</option>
                             </select>
 
@@ -135,7 +135,7 @@
                                    name="customTitle"
                                    class="form-control mt-2"
                                    placeholder="Enter custom title"
-                                   style="display:none;" />
+                                   style="display:none;"/>
                         </div>
                     </div>
 
@@ -145,9 +145,10 @@
                             <select id="employee-type" name="employeeType" class="form-control selectpicker"
                                     asp-items="@(Enum.GetValues(typeof(EmployeeType))
                                                    .Cast<EmployeeType>()
-                                                   .Select(e => new SelectListItem {
+                                                   .Select(e => new SelectListItem
+                                                   {
                                                        Value = ((int)e).ToString(),
-                                                       Text  = e.ToString()
+                                                       Text = e.ToString()
                                                    })
                                                    .ToList())">
                                 <option value="">Select</option>
@@ -162,7 +163,7 @@
                         <div class="form-group">
                             <label for="supervisor">Hiring Manager <span>*</span></label>
                             <select id="supervisor" name="supervisor" class="form-control selectpicker"
-                                asp-items="@(ViewBag.Employees as List<SelectListItem>)">
+                                    asp-items="@(ViewBag.Employees as List<SelectListItem>)">
                                 <option value="">-- Select Employee --</option>
                             </select>
                         </div>
@@ -172,7 +173,7 @@
                         <div class="form-group">
                             <label for="start-date">Start Date <span>*</span></label>
                             <input type="date" id="start-date" name="startDate"
-                                   class="form-control" />
+                                   class="form-control"/>
                         </div>
                     </div>
 
@@ -180,14 +181,14 @@
                         <div class="form-group">
                             <label for="termination-date">Termination Date</label>
                             <input type="date" id="termination-date" name="terminationDate"
-                                   class="form-control" />
+                                   class="form-control"/>
                         </div>
                     </div>
 
 
                     <div class="row mt-3">
                         <div class="form-group">
-                            <input type="checkbox" id="rehire" name="rehire" class="form-check-input" />
+                            <input type="checkbox" id="rehire" name="rehire" class="form-check-input"/>
                             <label class="form-check-label" for="rehire">Rehire</label>
                         </div>
                     </div>
