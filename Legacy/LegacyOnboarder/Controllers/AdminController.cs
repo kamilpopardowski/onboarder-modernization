@@ -23,10 +23,15 @@ public class AdminController : Controller
 
     public IActionResult Index()
     {
+        return BuildIndexView();
+    }
+    
+    private IActionResult BuildIndexView()
+    {
         var requests = _db.Requests
             .OrderByDescending(r => r.Id)
-            .ToList(); // entity = view model
-        
+            .ToList();
+
         EnsureDefaultWorkflow(_db);
 
         PopulateViewBag();
@@ -35,13 +40,15 @@ public class AdminController : Controller
         {
             if (string.IsNullOrEmpty(r.TitleDescription))
             {
-                r.TitleName = ((List<SelectListItem>)ViewBag.Titles)?.FirstOrDefault(t => int.Parse(t.Value) == r.TitleId)?.Text;
+                r.TitleName = ((List<SelectListItem>)ViewBag.Titles)
+                    ?.FirstOrDefault(t => int.Parse(t.Value) == r.TitleId)?.Text;
             }
-            
-            r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
+
+            r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)
+                ?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
         }
-        
-        return View(requests);
+
+        return View("Index", requests);
     }
 
     private void PopulateViewBag()
@@ -73,6 +80,14 @@ public class AdminController : Controller
                 Value = e.Id.ToString(),
                 Text  = e.EmployeeFirstName + " " + e.EmployeeLastName
             })
+            .ToList();
+        
+        ViewBag.EmployeeTypes = Enum.GetValues<EmployeeType>()
+            .Select(e => new SelectListItem
+            { 
+                Value = ((int)e).ToString(),
+                Text = e.ToString()
+            }) 
             .ToList();
     }
     
@@ -203,7 +218,7 @@ public class AdminController : Controller
                 .OrderByDescending(r => r.Id)
                 .ToList();
 
-            return View("Index", invalidList);
+            return BuildIndexView();
         }
 
         // Decide status based on the magical 'submit' value
@@ -309,7 +324,7 @@ public class AdminController : Controller
             .OrderByDescending(r => r.Id)
             .ToList();
 
-        return View("Index", list);
+        return BuildIndexView();
     }
 
     private bool IsValidDate(string date)

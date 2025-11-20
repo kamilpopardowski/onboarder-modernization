@@ -2,11 +2,47 @@
 
 $(document).ready(function () {
 
+    function initBootstrapSelectOnce() {
+        if (!$.fn.selectpicker) return;
+
+        $('.selectpicker').each(function () {
+            var $s = $(this);
+            // if bs.select instance already attached, don't init again
+            if (!$s.data('bs.select')) {
+                $s.selectpicker();
+            }
+        });
+    }
+
+    initBootstrapSelectOnce();
+
+    function setSelectValue($select, value) {
+        // If bootstrap-select is available and this select is a selectpicker
+        if ($.fn.selectpicker && $select.hasClass('selectpicker')) {
+            if (value === null || value === undefined || value === '') {
+                $select.selectpicker('val', '');
+            } else {
+                $select.selectpicker('val', String(value));
+            }
+            // ensure UI sync
+            $select.selectpicker('refresh');
+        } else {
+            // plain select fallback
+            if (value === null || value === undefined || value === '') {
+                $select.val('');
+            } else {
+                $select.val(String(value));
+            }
+            $select.trigger('change');
+        }
+    }
+    
     function getEmployeeModal() {
-        var modalElement = document.getElementById('modal-new-employee');
-        var modal = bootstrap.Modal.getInstance(modalElement);
+        var el = document.getElementById('modal-new-employee');
+        if (!el) return null;
+        var modal = bootstrap.Modal.getInstance(el);
         if (!modal) {
-            modal = new bootstrap.Modal(modalElement);
+            modal = new bootstrap.Modal(el);
         }
         return modal;
     }
@@ -20,24 +56,52 @@ $(document).ready(function () {
         $('.termination-date-row').toggle(isOff);
     }
 
+    // function clearEmployeeForm() {
+    //     $('#request-id').val('0');
+    //     $('#first-name').val('');
+    //     $('#last-name').val('');
+    //     $('#department').val('');
+    //     $('#title').val('');
+    //     $('#customTitleInput').val('').hide();
+    //     $('#employee-type').val('');
+    //     $('#supervisor').val('');
+    //     $('#start-date').val('');
+    //     $('#termination-date').val('');
+    //     $('#rehire').prop('checked', false);
+    //
+    //     // default: onboarding
+    //     //$('#request-type').val('false');
+    //     $('#employeeModalTitle').text('New Employee');
+    //
+    //     updateDateVisibility();
+    // }
+
     function clearEmployeeForm() {
         $('#request-id').val('0');
         $('#first-name').val('');
         $('#last-name').val('');
-        $('#department').val('');
-        $('#title').val('');
+
+        if ($.fn.selectpicker) {
+            $('#department').selectpicker('val', '');
+            $('#title').selectpicker('val', '');
+            $('#employee-type').selectpicker('val', '');
+            $('#supervisor').selectpicker('val', '');
+        } else {
+            $('#department').val('');
+            $('#title').val('');
+            $('#employee-type').val('');
+            $('#supervisor').val('');
+        }
+
         $('#customTitleInput').val('').hide();
-        $('#employee-type').val('');
-        $('#supervisor').val('');
+
         $('#start-date').val('');
         $('#termination-date').val('');
         $('#rehire').prop('checked', false);
-
-        // default: onboarding
-        //$('#request-type').val('false');
-        $('#employeeModalTitle').text('New Employee');
-
+        
         updateDateVisibility();
+
+        $('#employeeModalTitle').text('New Employee');
     }
 
     var tableSelector = '#requests-table';
@@ -69,85 +133,73 @@ $(document).ready(function () {
     // "New Employee" button
     $('#btn-new-employee').on('click', function () {
         clearEmployeeForm();
-        getEmployeeModal().show();
+        var modal = getEmployeeModal();
+        if (modal) modal.show();
     });
 
-    // Edit existing request
     $('#requests-table').on('click', '.btn-edit-request', function () {
+
+        clearEmployeeForm();
+
         var $row = $(this).closest('tr');
 
-        $('#request-id').val($row.data('request-id'));
-        $('#first-name').val($row.data('first-name'));
-        $('#last-name').val($row.data('last-name'));
-        $('#department').val($row.data('department'));
-        $('#title').val($row.data('title'));
-        $('#employee-type').val($row.data('employee-type'));
-        $('#supervisor').val($row.data('supervisor'));
+        var requestId    = $row.data('request-id');
+        var firstName    = $row.data('first-name');
+        var lastName     = $row.data('last-name');
+        var departmentId = $row.data('department-id');
+        var titleId      = $row.data('title-id');
+        var customTitle  = $row.data('custom-title');
+        var employeeType = $row.data('employee-type');
+        var supervisorId = $row.data('supervisor');
+        var startDate    = $row.data('start-date');
+        var termDate     = $row.data('termination-date');
 
-        var startDate        = $row.data('start-date');
-        var terminationDate  = $row.data('termination-date');
-        var customTitle      = $row.data('custom-title');
-        var rehireRaw        = $row.data('rehire');
-        var isOffboardingRaw = $row.data('is-offboarding');
+        // IMPORTANT: read raw attributes for booleans
+        var isOffRaw = $row.attr('data-is-offboarding');  // "True" / "False" / "true" / "false"
+        var rehireRaw = $row.attr('data-rehire');         // same story
 
-        $('#start-date').val(startDate || '');
-        $('#termination-date').val(terminationDate || '');
+        var isOff   = String(isOffRaw || '').toLowerCase() === 'true';
+        var isRehire = String(rehireRaw || '').toLowerCase() === 'true';
 
-        // Rehire checkbox
-        var rehireBool =
-            rehireRaw === true ||
-            String(rehireRaw).toLowerCase() === 'true' ||
-            rehireRaw === 1 ||
-            rehireRaw === '1';
+        $('#employeeModalTitle').text('Edit Employee Request #' + requestId);
+        $('#request-id').val(requestId);
+        $('#first-name').val(firstName);
+        $('#last-name').val(lastName);
 
-        $('#rehire').prop('checked', rehireBool);
+        // set request type select correctly
+        $('#request-type').val(isOff ? 'true' : 'false');
+        updateDateVisibility();
 
-        // Request type select
-        var isOffboardingBool =
-            isOffboardingRaw === true ||
-            String(isOffboardingRaw).toLowerCase() === 'true' ||
-            isOffboardingRaw === 1 ||
-            isOffboardingRaw === '1';
+        // Department
+        setSelectValue($('#department'), departmentId);
 
-        $('#request-type').val(isOffboardingBool ? 'true' : 'false');
+        // Employee Type
+        setSelectValue($('#employee-type'), employeeType);
 
-        // if (customTitle && customTitle.length > 0) {
-        //     $('#customTitleInput').val(customTitle).show();
-        //     $('#title').val('-1'); // "Other"
-        // } else {
-        //     $('#customTitleInput').val('').hide();
-        // }
+        // Supervisor
+        setSelectValue($('#supervisor'), supervisorId);
 
-        var titleIdRaw = $row.data('title-id');
-        var customTitleRaw = $row.data('custom-title');
-
-        var titleId = titleIdRaw ? parseInt(titleIdRaw) : 0;
-        var hasCustom = customTitleRaw && customTitleRaw.length > 0;
-
-        // Matching TitleId from the dropdown
-        var titleMatches = false;
-        if (titleId > 0) {
-            if ($("#title option[value='" + titleId + "']").length > 0) {
-                $("#title").val(titleId);
-                titleMatches = true;
-            }
-        }
-
-        // TitleId didn’t match any option then use custom title
-        if (!titleMatches && hasCustom) {
-            $("#title").val("-1"); // “Other”
-            $("#customTitleInput").val(customTitleRaw).show();
+        // Title + custom title
+        if (titleId && $("#title option[value='" + titleId + "']").length > 0) {
+            setSelectValue($('#title'), titleId);
+            $('#customTitleInput').hide().val('');
+        } else if (customTitle && customTitle.length > 0) {
+            setSelectValue($('#title'), -1);
+            $('#customTitleInput').show().val(customTitle);
         } else {
-            $("#customTitleInput").hide().val("");
+            setSelectValue($('#title'), '');
+            $('#customTitleInput').hide().val('');
         }
 
-        $('#employeeModalTitle')
-            .text('Edit Employee Request #' + $row.data('request-id'));
+        // Dates + rehire
+        $('#start-date').val(startDate || '');
+        $('#termination-date').val(termDate || '');
+        $('#rehire').prop('checked', isRehire);
 
-        updateDateVisibility(); // make date rows match request type
-        getEmployeeModal().show();
+        var modal = getEmployeeModal();
+        if (modal) modal.show();
     });
-
+    
     // Custom title
     $('#title').on('change', function () {
         var value = $(this).val();
@@ -175,5 +227,9 @@ $(document).ready(function () {
     });
 
     // Initial state if modal gets opened somehow on page load
+    //updateDateVisibility();
+
+    // initial state
     updateDateVisibility();
+    $('#request-type').trigger('change');
 });

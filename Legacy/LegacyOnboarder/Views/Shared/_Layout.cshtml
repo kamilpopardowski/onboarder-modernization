@@ -6,6 +6,8 @@
     <title>@ViewData["Title"] - LegacyOnboarder</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-select/css/bootstrap-select.min.css" />
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/LegacyOnboarder.styles.css" asp-append-version="true" />
 </head>
@@ -36,12 +38,14 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - LegacyOnboarder - <a asp-area="" asp-controller="Admin" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - LegacyOnboarder
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/bootstrap-select/js/bootstrap-select.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

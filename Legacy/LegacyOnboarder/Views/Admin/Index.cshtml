@@ -51,7 +51,7 @@
             <tr data-request-id="@r.Id"
                 data-first-name="@r.EmployeeFirstName"
                 data-last-name="@r.EmployeeLastName"
-                data-department="@r.DepartmentId"
+                data-department-id="@r.DepartmentId"
                 data-title-id="@r.TitleId"
                 data-custom-title="@r.TitleDescription"
                 data-employee-type="@((int)r.EmployeeType)"
@@ -114,10 +114,19 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="department">Department <span>*</span></label>
-                            <select id="department" name="department"
-                                    class="form-select"
-                                    asp-items="@(ViewBag.Departments as List<SelectListItem>)">
-                                <option value="">-- Select Department --</option>
+                            <select id="department"
+                                    name="department"
+                                    class="form-select select2-lookup"
+                                    data-live-search="true"
+                                    title="-- Select Department --">
+                                @if (ViewBag?.Departments != null)
+                                {
+                                    @foreach (var d in ViewBag.Departments)
+                                    {
+                                        <option value="@d.Value">@d.Text</option>
+                                    }
+                                }
+        
                             </select>
                         </div>
                     </div>
@@ -125,9 +134,19 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="title">Title <span>*</span></label>
-                            <select id="title" name="title" class="form-control selectpicker"
-                                    asp-items="@(ViewBag.Titles as List<SelectListItem>)">
-                                <option value="">-- Select Title --</option>
+                            <select id="title"
+                                    name="title"
+                                    class="form-select select2-lookup"
+                                    data-live-search="true"
+                                    title="-- Select Title --">
+                                @if (ViewBag?.Titles != null)
+                                {
+                                    @foreach (var d in ViewBag.Titles)
+                                    {
+                                        <option value="@d.Value">@d.Text</option>
+                                    }
+                                }
+                                <option value="-1">Other...</option>
                             </select>
 
                             <input type="text"
@@ -142,29 +161,64 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="employee-type">Employee Type <span>*</span></label>
-                            <select id="employee-type" name="employeeType" class="form-control selectpicker"
-                                    asp-items="@(Enum.GetValues(typeof(EmployeeType))
-                                                   .Cast<EmployeeType>()
-                                                   .Select(e => new SelectListItem
-                                                   {
-                                                       Value = ((int)e).ToString(),
-                                                       Text = e.ToString()
-                                                   })
-                                                   .ToList())">
-                                <option value="">Select</option>
-                                @* <option value="1">Full-time</option> *@
-                                @* <option value="2">Contractor</option> *@
-                                @* <option value="3">Intern</option> *@
+                            <select id="employee-type"
+                                    name="employeeType"
+                                    class="form-select select2-lookup"
+                                    data-live-search="true"
+                                    title="-- Select Employment Type --">
+                                @if (ViewBag?.EmployeeTypes != null)
+                                {
+                                    @foreach (var d in ViewBag.EmployeeTypes)
+                                    {
+                                        <option value="@d.Value">@d.Text</option>
+                                    }
+                                }
                             </select>
+                            @* <select id="employee-type" name="employeeType" class="form-control selectpicker" *@
+                            @*         asp-items="@(Enum.GetValues(typeof(EmployeeType)) *@
+                            @*                        .Cast<EmployeeType>() *@
+                            @*                        .Select(e => new SelectListItem *@
+                            @*                        { *@
+                            @*                            Value = ((int)e).ToString(), *@
+                            @*                            Text = e.ToString() *@
+                            @*                        }) *@
+                            @*                        .ToList())"> *@
+                            @*     <option value="">Select</option> *@
+                            @* </select> *@
                         </div>
                     </div>
+
+                    @* <div class="row mt-3"> *@
+                    @*     <div class="form-group"> *@
+                    @*         <label for="supervisor">Hiring Manager <span>*</span></label> *@
+                    @*             <select id="supervisor" *@
+                    @*                     name="supervisor" *@
+                    @*                     class="selectpicker" *@
+                    @*                     data-live-search="true" *@
+                    @*                     title="-- Select Supervisor --"> *@
+                    @*                 @foreach (var d in ViewBag.Employees) *@
+                    @*                 { *@
+                    @*                     <option value="@d.Value">@d.Text</option> *@
+                    @*                 } *@
+                    @*             </select> *@
+                    @*     </div> *@
+                    @* </div> *@
 
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="supervisor">Hiring Manager <span>*</span></label>
-                            <select id="supervisor" name="supervisor" class="form-control selectpicker"
-                                    asp-items="@(ViewBag.Employees as List<SelectListItem>)">
-                                <option value="">-- Select Employee --</option>
+                            <select id="supervisor"
+                                    name="supervisor"
+                                    class="form-select select2-lookup"
+                                    data-live-search="true"
+                                    title="-- Select Supervisor --">
+                                @if(ViewBag.Employees != null)
+                                {
+                                    @foreach (var e in ViewBag.Employees)
+                                    {
+                                    <option value="@e.Value">@e.Text</option>
+                                    }
+                                }
                             </select>
                         </div>
                     </div>
