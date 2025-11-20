@@ -25,7 +25,7 @@ public class AdminController : Controller
     {
         return BuildIndexView();
     }
-    
+
     private IActionResult BuildIndexView()
     {
         var requests = _db.Requests
@@ -59,7 +59,7 @@ public class AdminController : Controller
             .Select(d => new SelectListItem
             {
                 Value = d.Id.ToString(),
-                Text  = d.DepartmentName
+                Text = d.DepartmentName
             })
             .ToList();
 
@@ -68,7 +68,7 @@ public class AdminController : Controller
             .Select(t => new SelectListItem
             {
                 Value = t.Id.ToString(),
-                Text  = t.Name
+                Text = t.Name
             })
             .ToList();
 
@@ -78,19 +78,19 @@ public class AdminController : Controller
             .Select(e => new SelectListItem
             {
                 Value = e.Id.ToString(),
-                Text  = e.EmployeeFirstName + " " + e.EmployeeLastName
+                Text = e.EmployeeFirstName + " " + e.EmployeeLastName
             })
             .ToList();
-        
+
         ViewBag.EmployeeTypes = Enum.GetValues<EmployeeType>()
             .Select(e => new SelectListItem
-            { 
+            {
                 Value = ((int)e).ToString(),
                 Text = e.ToString()
-            }) 
+            })
             .ToList();
     }
-    
+
     private void EnsureDefaultWorkflow(AppDbContext db)
     {
         if (db.ProvisioningTasks.Any(t => t.IsTemplate && t.TaskKind == TaskKind.Checklist))
@@ -100,38 +100,38 @@ public class AdminController : Controller
         {
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = false,
-                TaskType            = "HR_WelcomeEmail",
-                DisplayName         = "Send welcome email",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = false,
+                TaskType = "HR_WelcomeEmail",
+                DisplayName = "Send welcome email",
                 DefaultAssignedToRole = "HR"
             },
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = false,
-                TaskType            = "MANAGER_IntroMeeting",
-                DisplayName         = "Schedule intro meeting",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = false,
+                TaskType = "MANAGER_IntroMeeting",
+                DisplayName = "Schedule intro meeting",
                 DefaultAssignedToRole = "Manager"
             },
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = true,
-                TaskType            = "HR_ExitInterview",
-                DisplayName         = "Conduct exit interview",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = true,
+                TaskType = "HR_ExitInterview",
+                DisplayName = "Conduct exit interview",
                 DefaultAssignedToRole = "HR"
             },
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = true,
-                TaskType            = "MANAGER_ResponsibilityTransfer",
-                DisplayName         = "Transfer responsibilities",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = true,
+                TaskType = "MANAGER_ResponsibilityTransfer",
+                DisplayName = "Transfer responsibilities",
                 DefaultAssignedToRole = "Manager"
             }
         };
@@ -255,8 +255,8 @@ public class AdminController : Controller
             existing.ProcessManagerId = employerRequest.ProcessManagerId;
             existing.StartDate = employerRequest.StartDate;
             existing.TerminationDate = employerRequest.TerminationDate;
-            existing.TitleId = employerRequest.TitleId == -1 ? null : employerRequest.TitleId;
-            existing.TitleDescription = employerRequest.TitleId == -1 ? employerRequest.TitleDescription : null;
+            existing.TitleId = employerRequest.TitleId;
+            existing.TitleDescription = employerRequest.TitleDescription;
             existing.Rehire = employerRequest.Rehire;
             existing.RequestStatus = employerRequest.RequestStatus;
             existing.IsEditing = employerRequest.IsEditing;
@@ -279,7 +279,7 @@ public class AdminController : Controller
                 .Select(r => r.Id)
                 .FirstOrDefault();
         }
-        
+
         if (requestIdForTasks == 0 && existing != null)
             requestIdForTasks = existing.Id;
 
@@ -300,7 +300,7 @@ public class AdminController : Controller
             _db.ProvisioningTasks.AddRange(tasks);
             _db.SaveChanges();
         }
-        
+
         // ViewBag message
         if (isCancel)
         {
@@ -417,7 +417,7 @@ public class AdminController : Controller
             }
         };
     }
-    
+
     private void CreateChecklistTasksForRequest(int requestId, bool isOffboarding)
     {
         var templates = _db.ProvisioningTasks
@@ -428,16 +428,16 @@ public class AdminController : Controller
 
         var instances = templates.Select(t => new RequestTask
         {
-            RequestRecordId   = requestId,
-            IsTemplate        = false,
-            TaskKind          = TaskKind.Checklist,
-            IsOffboarding     = t.IsOffboarding,
-            TaskType          = t.TaskType,
-            DisplayName       = t.DisplayName,
-            AssignedToRole    = t.DefaultAssignedToRole,
-            AssignedToUser    = t.DefaultAssignedToUser,
-            Status            = ProvisioningStatus.Pending,
-            CreatedAt         = DateTime.UtcNow
+            RequestRecordId = requestId,
+            IsTemplate = false,
+            TaskKind = TaskKind.Checklist,
+            IsOffboarding = t.IsOffboarding,
+            TaskType = t.TaskType,
+            DisplayName = t.DisplayName,
+            AssignedToRole = t.DefaultAssignedToRole,
+            AssignedToUser = t.DefaultAssignedToUser,
+            Status = ProvisioningStatus.Pending,
+            CreatedAt = DateTime.UtcNow
         }).ToList();
 
         if (instances.Any())
@@ -446,14 +446,14 @@ public class AdminController : Controller
             _db.SaveChanges();
         }
     }
-    
+
     [HttpGet]
     public IActionResult Tasks(int id)
     {
         var request = _db.Requests.FirstOrDefault(r => r.Id == id);
         if (request == null)
             return NotFound();
-        
+
         var tasks = _db.ProvisioningTasks
             .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
             .OrderBy(t => t.Id)
