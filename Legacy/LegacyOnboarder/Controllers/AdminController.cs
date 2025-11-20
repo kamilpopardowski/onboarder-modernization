@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using LegacyOnboarder.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-
 namespace LegacyOnboarder.Controllers;
 
 public class AdminController : Controller
@@ -23,25 +22,34 @@ public class AdminController : Controller
 
     public IActionResult Index()
     {
+        return BuildIndexView();
+    }
+
+    private IActionResult BuildIndexView()
+    {
         var requests = _db.Requests
             .OrderByDescending(r => r.Id)
-            .ToList(); // entity = view model
-        
-        EnsureDefaultWorkflow(_db);
+            .ToList();
 
+        EnsureDefaultWorkflow(_db);
         PopulateViewBag();
 
         foreach (var r in requests)
         {
             if (string.IsNullOrEmpty(r.TitleDescription))
             {
-                r.TitleDescription = ((List<SelectListItem>)ViewBag.Titles)?.FirstOrDefault(t => int.Parse(t.Value) == r.Id)?.Text;
+                r.TitleName = ((List<SelectListItem>)ViewBag.Titles)
+                    ?.FirstOrDefault(t => int.Parse(t.Value) == r.TitleId)?.Text;
             }
-            
-            r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
+
+            r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)
+                ?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
         }
-        
-        return View(requests);
+
+        var requestType = requests.FirstOrDefault()?.IsOffboarding ?? false;
+        ViewBag.RequestType = requestType; // true for offboarding, false for onboarding
+
+        return View("Index", requests);
     }
 
     private void PopulateViewBag()
@@ -52,7 +60,7 @@ public class AdminController : Controller
             .Select(d => new SelectListItem
             {
                 Value = d.Id.ToString(),
-                Text  = d.DepartmentName
+                Text = d.DepartmentName
             })
             .ToList();
 
@@ -61,7 +69,7 @@ public class AdminController : Controller
             .Select(t => new SelectListItem
             {
                 Value = t.Id.ToString(),
-                Text  = t.Name
+                Text = t.Name
             })
             .ToList();
 
@@ -71,11 +79,19 @@ public class AdminController : Controller
             .Select(e => new SelectListItem
             {
                 Value = e.Id.ToString(),
-                Text  = e.EmployeeFirstName + " " + e.EmployeeLastName
+                Text = e.EmployeeFirstName + " " + e.EmployeeLastName
+            })
+            .ToList();
+
+        ViewBag.EmployeeTypes = Enum.GetValues<EmployeeType>()
+            .Select(e => new SelectListItem
+            {
+                Value = ((int)e).ToString(),
+                Text = e.ToString()
             })
             .ToList();
     }
-    
+
     private void EnsureDefaultWorkflow(AppDbContext db)
     {
         if (db.ProvisioningTasks.Any(t => t.IsTemplate && t.TaskKind == TaskKind.Checklist))
@@ -85,38 +101,38 @@ public class AdminController : Controller
         {
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = false,
-                TaskType            = "HR_WelcomeEmail",
-                DisplayName         = "Send welcome email",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = false,
+                TaskType = "HR_WelcomeEmail",
+                DisplayName = "Send welcome email",
                 DefaultAssignedToRole = "HR"
             },
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = false,
-                TaskType            = "MANAGER_IntroMeeting",
-                DisplayName         = "Schedule intro meeting",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = false,
+                TaskType = "MANAGER_IntroMeeting",
+                DisplayName = "Schedule intro meeting",
                 DefaultAssignedToRole = "Manager"
             },
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = true,
-                TaskType            = "HR_ExitInterview",
-                DisplayName         = "Conduct exit interview",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = true,
+                TaskType = "HR_ExitInterview",
+                DisplayName = "Conduct exit interview",
                 DefaultAssignedToRole = "HR"
             },
             new RequestTask
             {
-                IsTemplate          = true,
-                TaskKind            = TaskKind.Checklist,
-                IsOffboarding       = true,
-                TaskType            = "MANAGER_ResponsibilityTransfer",
-                DisplayName         = "Transfer responsibilities",
+                IsTemplate = true,
+                TaskKind = TaskKind.Checklist,
+                IsOffboarding = true,
+                TaskType = "MANAGER_ResponsibilityTransfer",
+                DisplayName = "Transfer responsibilities",
                 DefaultAssignedToRole = "Manager"
             }
         };
@@ -162,8 +178,8 @@ public class AdminController : Controller
             ProcessManagerId = supervisor,
             StartDate = startDate,
             TerminationDate = terminationDate,
-            TitleId = title,
-            TitleDescription = customTitle,
+            TitleId = title == -1 ? null : title,
+            TitleDescription = title == -1 ? customTitle : null,
             Rehire = rehire != null && rehire.ToLower() == "on",
             RequestStatus = RequestStatus.Submitted,
             IsEditing = isEditing,
@@ -198,12 +214,7 @@ public class AdminController : Controller
             _logger.LogWarning("Invalid employee/request data: {@EmployerRequest}", employerRequest);
             ViewBag.Error = "The employee request is invalid. Please fix the fields and try again.";
 
-            // reload list for Index view, entity == view model
-            var invalidList = _db.Requests
-                .OrderByDescending(r => r.Id)
-                .ToList();
-
-            return View("Index", invalidList);
+            return BuildIndexView();
         }
 
         // Decide status based on the magical 'submit' value
@@ -264,18 +275,16 @@ public class AdminController : Controller
                 .Select(r => r.Id)
                 .FirstOrDefault();
         }
-        
+
         if (requestIdForTasks == 0 && existing != null)
             requestIdForTasks = existing.Id;
 
-        // only create tasks on brand new requests (not edits) – or do whatever you want
+        // only create tasks on brand new requests 
         if (!isEditing)
         {
             CreateChecklistTasksForRequest(requestIdForTasks, isOffboarding);
         }
 
-
-        // create tasks only if we actually submitted or put on hold (not deleted)
         if (employerRequest.RequestStatus != RequestStatus.Deleted)
         {
             var tasks = employerRequest.IsOffboarding
@@ -285,7 +294,7 @@ public class AdminController : Controller
             _db.ProvisioningTasks.AddRange(tasks);
             _db.SaveChanges();
         }
-        
+
         // ViewBag message
         if (isCancel)
         {
@@ -304,12 +313,8 @@ public class AdminController : Controller
                 : "Request submitted.";
         }
 
-        // Reload list for Index
-        var list = _db.Requests
-            .OrderByDescending(r => r.Id)
-            .ToList();
-
-        return View("Index", list);
+        ViewBag.RequestType = isOffboarding;
+        return BuildIndexView();
     }
 
     private bool IsValidDate(string date)
@@ -402,7 +407,7 @@ public class AdminController : Controller
             }
         };
     }
-    
+
     private void CreateChecklistTasksForRequest(int requestId, bool isOffboarding)
     {
         var templates = _db.ProvisioningTasks
@@ -413,16 +418,16 @@ public class AdminController : Controller
 
         var instances = templates.Select(t => new RequestTask
         {
-            RequestRecordId   = requestId,
-            IsTemplate        = false,
-            TaskKind          = TaskKind.Checklist,
-            IsOffboarding     = t.IsOffboarding,
-            TaskType          = t.TaskType,
-            DisplayName       = t.DisplayName,
-            AssignedToRole    = t.DefaultAssignedToRole,
-            AssignedToUser    = t.DefaultAssignedToUser,
-            Status            = ProvisioningStatus.Pending,
-            CreatedAt         = DateTime.UtcNow
+            RequestRecordId = requestId,
+            IsTemplate = false,
+            TaskKind = TaskKind.Checklist,
+            IsOffboarding = t.IsOffboarding,
+            TaskType = t.TaskType,
+            DisplayName = t.DisplayName,
+            AssignedToRole = t.DefaultAssignedToRole,
+            AssignedToUser = t.DefaultAssignedToUser,
+            Status = ProvisioningStatus.Pending,
+            CreatedAt = DateTime.UtcNow
         }).ToList();
 
         if (instances.Any())
@@ -431,14 +436,14 @@ public class AdminController : Controller
             _db.SaveChanges();
         }
     }
-    
+
     [HttpGet]
     public IActionResult Tasks(int id)
     {
         var request = _db.Requests.FirstOrDefault(r => r.Id == id);
         if (request == null)
             return NotFound();
-        
+
         var tasks = _db.ProvisioningTasks
             .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
             .OrderBy(t => t.Id)

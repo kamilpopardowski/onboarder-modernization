@@ -24,10 +24,24 @@
     <div class="row mt-3">
         <div class="form-group">
             <label for="request-type">Request type <span>*</span></label>
-            <select id="request-type" name="isOffboarding" class="form-control">
-                <option value="false">Onboarding (new hire)</option>
-                <option value="true">Offboarding (termination)</option>
+            @{
+                bool isOffboarding = ViewBag.RequestType ?? false; // Assume ViewBag.IsOnboarding determines the state.
+            }
+
+            <select id="request-type" name="isOffboarding" class="form-select">
+                @if (!isOffboarding)
+                {
+                    <option value="false" selected>Onboarding (new hire)</option>
+                    <option value="true">Offboarding (termination)</option>
+                }
+                else
+                {
+                    <option value="false">Onboarding (new hire)</option>
+                    <option value="true" selected>Offboarding (termination)</option>
+                }
             </select>
+
+
         </div>
     </div>
     <table class="table table-striped table-sm" id="requests-table">
@@ -46,40 +60,33 @@
             </tr>
         </thead>
         <tbody>
-        @foreach (var r in Model)
-        {
-            <tr data-request-id="@r.Id"
-                data-first-name="@r.EmployeeFirstName"
-                data-last-name="@r.EmployeeLastName"
-                data-department="@r.DepartmentName"
-                data-title="@r.TitleDescription"
-                data-custom-title="@r.TitleDescription"
-                data-employee-type="@r.EmployeeType"
-                data-supervisor="@r.ProcessManagerName"
-                data-start-date="@r.StartDate"
-                data-termination-date="@r.TerminationDate"
-                data-rehire="@r.Rehire"
-                data-is-offboarding="@string.IsNullOrEmpty(r.StartDate)">
-                <td>@r.Id</td>
-                <td>
-                    <a href="@Url.Action("Tasks", "Admin", new { id = r.Id })">
-                        @r.EmployeeFirstName @r.EmployeeLastName
-                    </a>
-                </td>
-                <td>@r.DepartmentName</td>
-                <td>@(string.IsNullOrEmpty(r.TitleDescription) ? r.TitleId.ToString() : r.TitleDescription)</td>
-                <td>@r.RequestStatus</td>
-                <td>@r.StartDate</td>
-                <td>@r.TerminationDate</td>
-                <td>@(r.Rehire ? "Yes" : "No")</td>
-                <td>@(string.IsNullOrEmpty(r.StartDate) ? "Offboarding" : "Onboarding")</td>
-                <td>
-                    <button class="btn btn-sm btn-secondary btn-edit-request">
-                        Edit
-                    </button>
-                </td>
-            </tr>
-        }
+            @foreach (var r in Model)
+            {
+                <tr data-request-id="@r.Id" data-first-name="@r.EmployeeFirstName" data-last-name="@r.EmployeeLastName"
+                    data-department-id="@r.DepartmentId" data-title-id="@r.TitleId" data-custom-title="@r.TitleDescription"
+                    data-employee-type="@((int)r.EmployeeType)" data-supervisor="@r.ProcessManagerId"
+                    data-start-date="@r.StartDate" data-termination-date="@r.TerminationDate" data-rehire="@r.Rehire"
+                    data-is-offboarding="@string.IsNullOrEmpty(r.StartDate)">
+                    <td>@r.Id</td>
+                    <td>
+                        <a href="@Url.Action("Tasks", "Admin", new { id = r.Id })">
+                            @r.EmployeeFirstName @r.EmployeeLastName
+                        </a>
+                    </td>
+                    <td>@r.DepartmentName</td>
+                    <td>@(r.TitleDescription ?? r.TitleName ?? "(Unknown)")</td>
+                    <td>@r.RequestStatus</td>
+                    <td>@r.StartDate</td>
+                    <td>@r.TerminationDate</td>
+                    <td>@(r.Rehire ? "Yes" : "No")</td>
+                    <td>@(string.IsNullOrEmpty(r.StartDate) ? "Offboarding" : "Onboarding")</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary btn-edit-request">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
 </div>
@@ -114,10 +121,16 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="department">Department <span>*</span></label>
-                            <select id="department" name="department"
-                                    class="form-select"
-                                    asp-items="@(ViewBag.Departments as List<SelectListItem>)">
-                                <option value="">-- Select Department --</option>
+                            <select id="department" name="department" class="form-select select2-lookup"
+                                data-live-search="true" title=" -- Select Department --">
+                                <option></option>
+                                @if (ViewBag?.Departments != null)
+                                {
+                                    @foreach (var d in ViewBag.Departments)
+                                    {
+                                        <option value="@d.Value">@d.Text</option>
+                                    }
+                                }
                             </select>
                         </div>
                     </div>
@@ -125,35 +138,37 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="title">Title <span>*</span></label>
-                            <select id="title" name="title" class="form-control selectpicker"
-                                asp-items="@(ViewBag.Titles as List<SelectListItem>)">
-                                <option value="">-- Select Title --</option>
+                            <select id="title" name="title" class="form-select select2-lookup" data-live-search="true"
+                                title=" -- Select Title --">
+                                <option></option>
+                                @if (ViewBag?.Titles != null)
+                                {
+                                    @foreach (var d in ViewBag.Titles)
+                                    {
+                                        <option value="@d.Value">@d.Text</option>
+                                    }
+                                }
+                                <option value="-1">Other...</option>
                             </select>
 
-                            <input type="text"
-                                   id="customTitleInput"
-                                   name="customTitle"
-                                   class="form-control mt-2"
-                                   placeholder="Enter custom title"
-                                   style="display:none;" />
+                            <input type="text" id="customTitleInput" name="customTitle" class="form-control mt-2"
+                                placeholder="Enter custom title" style="display:none;" />
                         </div>
                     </div>
 
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="employee-type">Employee Type <span>*</span></label>
-                            <select id="employee-type" name="employeeType" class="form-control selectpicker"
-                                    asp-items="@(Enum.GetValues(typeof(EmployeeType))
-                                                   .Cast<EmployeeType>()
-                                                   .Select(e => new SelectListItem {
-                                                       Value = ((int)e).ToString(),
-                                                       Text  = e.ToString()
-                                                   })
-                                                   .ToList())">
-                                <option value="">Select</option>
-                                @* <option value="1">Full-time</option> *@
-                                @* <option value="2">Contractor</option> *@
-                                @* <option value="3">Intern</option> *@
+                            <select id="employee-type" name="employeeType" class="form-select select2-lookup"
+                                data-live-search="true" title=" -- Select Employment Type --">
+                                <option></option>
+                                @if (ViewBag?.EmployeeTypes != null)
+                                {
+                                    @foreach (var d in ViewBag.EmployeeTypes)
+                                    {
+                                        <option value="@d.Value">@d.Text</option>
+                                    }
+                                }
                             </select>
                         </div>
                     </div>
@@ -161,9 +176,16 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="supervisor">Hiring Manager <span>*</span></label>
-                            <select id="supervisor" name="supervisor" class="form-control selectpicker"
-                                asp-items="@(ViewBag.Employees as List<SelectListItem>)">
-                                <option value="">-- Select Employee --</option>
+                            <select id="supervisor" name="supervisor" class="form-select select2-lookup"
+                                data-live-search="true" title=" -- Select Hiring Manager --">
+                                <option></option>
+                                @if (ViewBag.Employees != null)
+                                {
+                                    @foreach (var e in ViewBag.Employees)
+                                    {
+                                        <option value="@e.Value">@e.Text</option>
+                                    }
+                                }
                             </select>
                         </div>
                     </div>
@@ -171,19 +193,16 @@
                     <div class="row mt-3 start-date-row">
                         <div class="form-group">
                             <label for="start-date">Start Date <span>*</span></label>
-                            <input type="date" id="start-date" name="startDate"
-                                   class="form-control" />
+                            <input type="date" id="start-date" name="startDate" class="form-control" />
                         </div>
                     </div>
 
                     <div class="row mt-3 termination-date-row">
                         <div class="form-group">
                             <label for="termination-date">Termination Date</label>
-                            <input type="date" id="termination-date" name="terminationDate"
-                                   class="form-control" />
+                            <input type="date" id="termination-date" name="terminationDate" class="form-control" />
                         </div>
                     </div>
-
 
                     <div class="row mt-3">
                         <div class="form-group">
@@ -195,26 +214,16 @@
 
                 <div class="modal-footer">
                     <div class="d-flex justify-content-end">
-                        <button class="btn btn-secondary me-3"
-                                type="submit"
-                                name="submit"
-                                value="cancel">
+                        <button class="btn btn-secondary me-3" type="submit" name="submit" value="cancel">
                             Cancel
                         </button>
 
-                        <button id="saveCloseButton"
-                                class="btn btn-outline-primary me-2"
-                                type="submit"
-                                name="submit"
-                                value="add-save">
+                        <button id="saveCloseButton" class="btn btn-outline-primary me-2" type="submit" name="submit"
+                            value="add-save">
                             Save &amp; Close
                         </button>
 
-                        <button id="saveSendButton"
-                                class="btn btn-primary"
-                                type="submit"
-                                name="submit"
-                                value="add-send">
+                        <button id="saveSendButton" class="btn btn-primary" type="submit" name="submit" value="add-send">
                             Save &amp; Send
                         </button>
                     </div>
