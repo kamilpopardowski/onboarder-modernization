@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using LegacyOnboarder.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 
 namespace LegacyOnboarder.Controllers;
@@ -25,8 +26,103 @@ public class AdminController : Controller
         var requests = _db.Requests
             .OrderByDescending(r => r.Id)
             .ToList(); // entity = view model
+        
+        EnsureDefaultWorkflow(_db);
 
+        PopulateViewBag();
+
+        foreach (var r in requests)
+        {
+            if (string.IsNullOrEmpty(r.TitleDescription))
+            {
+                r.TitleDescription = ((List<SelectListItem>)ViewBag.Titles)?.FirstOrDefault(t => int.Parse(t.Value) == r.Id)?.Text;
+            }
+            
+            r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
+        }
+        
         return View(requests);
+    }
+
+    private void PopulateViewBag()
+    {
+        // LOOKUP LISTS
+        ViewBag.Departments = _db.Departments
+            .OrderBy(d => d.DepartmentName)
+            .Select(d => new SelectListItem
+            {
+                Value = d.Id.ToString(),
+                Text  = d.DepartmentName
+            })
+            .ToList();
+
+        ViewBag.Titles = _db.Titles
+            .OrderBy(t => t.Name)
+            .Select(t => new SelectListItem
+            {
+                Value = t.Id.ToString(),
+                Text  = t.Name
+            })
+            .ToList();
+
+        ViewBag.Employees = _db.Employees
+            .OrderBy(e => e.EmployeeLastName)
+            .ThenBy(e => e.EmployeeFirstName)
+            .Select(e => new SelectListItem
+            {
+                Value = e.Id.ToString(),
+                Text  = e.EmployeeFirstName + " " + e.EmployeeLastName
+            })
+            .ToList();
+    }
+    
+    private void EnsureDefaultWorkflow(AppDbContext db)
+    {
+        if (db.ProvisioningTasks.Any(t => t.IsTemplate && t.TaskKind == TaskKind.Checklist))
+            return; // already seeded
+
+        var defaults = new List<RequestTask>
+        {
+            new RequestTask
+            {
+                IsTemplate          = true,
+                TaskKind            = TaskKind.Checklist,
+                IsOffboarding       = false,
+                TaskType            = "HR_WelcomeEmail",
+                DisplayName         = "Send welcome email",
+                DefaultAssignedToRole = "HR"
+            },
+            new RequestTask
+            {
+                IsTemplate          = true,
+                TaskKind            = TaskKind.Checklist,
+                IsOffboarding       = false,
+                TaskType            = "MANAGER_IntroMeeting",
+                DisplayName         = "Schedule intro meeting",
+                DefaultAssignedToRole = "Manager"
+            },
+            new RequestTask
+            {
+                IsTemplate          = true,
+                TaskKind            = TaskKind.Checklist,
+                IsOffboarding       = true,
+                TaskType            = "HR_ExitInterview",
+                DisplayName         = "Conduct exit interview",
+                DefaultAssignedToRole = "HR"
+            },
+            new RequestTask
+            {
+                IsTemplate          = true,
+                TaskKind            = TaskKind.Checklist,
+                IsOffboarding       = true,
+                TaskType            = "MANAGER_ResponsibilityTransfer",
+                DisplayName         = "Transfer responsibilities",
+                DefaultAssignedToRole = "Manager"
+            }
+        };
+
+        db.ProvisioningTasks.AddRange(defaults);
+        db.SaveChanges();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -38,39 +134,40 @@ public class AdminController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult SaveEmployee(
-        string submit, 
+        string submit,
         int requestID,
         string firstName,
         string lastName,
         int department,
         int title,
-        int employeeType,
+        EmployeeType employeeType,
         int supervisor,
-        bool isOffboarding, 
+        bool isOffboarding,
         string? rehire = null,
         string? startDate = null,
         string? terminationDate = null,
         string? customTitle = null)
     {
-       // editing = any existing requestId > 0 or submit text contains "edit"
-        var isEditing = requestID > 0 || (submit != null && submit.Contains("edit", StringComparison.OrdinalIgnoreCase));
-        
+        // editing = any existing requestId > 0 or submit text contains "edit"
+        var isEditing = requestID > 0 ||
+                        (submit != null && submit.Contains("edit", StringComparison.OrdinalIgnoreCase));
+
         var employerRequest = new RequestRecord
         {
             Id = requestID,
             EmployeeFirstName = firstName,
-            EmployeeLastName  = lastName,
-            DepartmentId      = department,
-            EmployeeTypeId    = employeeType,
-            HiringManagerId   = supervisor,
-            StartDate         = startDate,
-            TerminationDate   = terminationDate,
-            TitleId           = title,
-            TitleDescription  = customTitle,
-            Rehire            = rehire != null && rehire.ToLower() == "on",
-            RequestStatus     = RequestStatus.Submitted,
-            IsEditing         = isEditing,
-            IsOffboarding     = isOffboarding
+            EmployeeLastName = lastName,
+            DepartmentId = department,
+            EmployeeType = employeeType,
+            ProcessManagerId = supervisor,
+            StartDate = startDate,
+            TerminationDate = terminationDate,
+            TitleId = title,
+            TitleDescription = customTitle,
+            Rehire = rehire != null && rehire.ToLower() == "on",
+            RequestStatus = RequestStatus.Submitted,
+            IsEditing = isEditing,
+            IsOffboarding = isOffboarding
         };
 
         // inline validation & helpers
@@ -86,7 +183,7 @@ public class AdminController : Controller
             {
                 return false;
             }
-            
+
             if (!string.IsNullOrEmpty(startDate) && !IsValidDate(startDate))
                 return false;
 
@@ -111,8 +208,8 @@ public class AdminController : Controller
 
         // Decide status based on the magical 'submit' value
         var isCancel = string.Equals(submit, "cancel", StringComparison.OrdinalIgnoreCase);
-        var isSend   = submit != null && submit.Contains("send", StringComparison.OrdinalIgnoreCase);
-        var isOnHold = !isCancel && !isSend; 
+        var isSend = submit != null && submit.Contains("send", StringComparison.OrdinalIgnoreCase);
+        var isOnHold = !isCancel && !isSend;
 
         if (isCancel)
         {
@@ -137,18 +234,18 @@ public class AdminController : Controller
         if (existing != null)
         {
             existing.EmployeeFirstName = employerRequest.EmployeeFirstName;
-            existing.EmployeeLastName  = employerRequest.EmployeeLastName;
-            existing.DepartmentId      = employerRequest.DepartmentId;
-            existing.EmployeeTypeId    = employerRequest.EmployeeTypeId;
-            existing.HiringManagerId   = employerRequest.HiringManagerId;
-            existing.StartDate         = employerRequest.StartDate;
-            existing.TerminationDate   = employerRequest.TerminationDate;
-            existing.TitleId           = employerRequest.TitleId;
-            existing.TitleDescription  = employerRequest.TitleDescription;
-            existing.Rehire            = employerRequest.Rehire;
-            existing.RequestStatus     = employerRequest.RequestStatus;
-            existing.IsEditing         = employerRequest.IsEditing;
-            existing.IsOffboarding     = employerRequest.IsOffboarding;
+            existing.EmployeeLastName = employerRequest.EmployeeLastName;
+            existing.DepartmentId = employerRequest.DepartmentId;
+            existing.EmployeeType = employerRequest.EmployeeType;
+            existing.ProcessManagerId = employerRequest.ProcessManagerId;
+            existing.StartDate = employerRequest.StartDate;
+            existing.TerminationDate = employerRequest.TerminationDate;
+            existing.TitleId = employerRequest.TitleId;
+            existing.TitleDescription = employerRequest.TitleDescription;
+            existing.Rehire = employerRequest.Rehire;
+            existing.RequestStatus = employerRequest.RequestStatus;
+            existing.IsEditing = employerRequest.IsEditing;
+            existing.IsOffboarding = employerRequest.IsOffboarding;
         }
         else
         {
@@ -156,7 +253,7 @@ public class AdminController : Controller
         }
 
         _db.SaveChanges();
-        
+
         var requestIdForTasks = existing?.Id ?? employerRequest.Id;
 
         if (requestIdForTasks == 0)
@@ -167,6 +264,16 @@ public class AdminController : Controller
                 .Select(r => r.Id)
                 .FirstOrDefault();
         }
+        
+        if (requestIdForTasks == 0 && existing != null)
+            requestIdForTasks = existing.Id;
+
+        // only create tasks on brand new requests (not edits) – or do whatever you want
+        if (!isEditing)
+        {
+            CreateChecklistTasksForRequest(requestIdForTasks, isOffboarding);
+        }
+
 
         // create tasks only if we actually submitted or put on hold (not deleted)
         if (employerRequest.RequestStatus != RequestStatus.Deleted)
@@ -178,8 +285,8 @@ public class AdminController : Controller
             _db.ProvisioningTasks.AddRange(tasks);
             _db.SaveChanges();
         }
-
-        // ViewBag message lottery
+        
+        // ViewBag message
         if (isCancel)
         {
             ViewBag.Message = "Request cancelled.";
@@ -204,95 +311,169 @@ public class AdminController : Controller
 
         return View("Index", list);
     }
-    
+
     private bool IsValidDate(string date)
     {
         var pattern = @"^\d{4}-\d{2}-\d{2}$";
         return Regex.IsMatch(date, pattern);
     }
+
+
+    private List<RequestTask> BuildOnboardingTasks(int requestId)
+    {
+        return new List<RequestTask>
+        {
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "IT_CreateAdAccount",
+                AssignedToRole = "IT",
+                IsOffboarding = false
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "IT_CreateEmailAccount",
+                AssignedToRole = "IT",
+                IsOffboarding = false
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "IT_ProvisionLaptop",
+                AssignedToRole = "IT",
+                IsOffboarding = false
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "HR_WelcomeEmail",
+                AssignedToRole = "HR",
+                IsOffboarding = false
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "MANAGER_IntroMeeting",
+                AssignedToRole = "Manager",
+                IsOffboarding = false
+            }
+        };
+    }
+
+    private List<RequestTask> BuildOffboardingTasks(int requestId)
+    {
+        return new List<RequestTask>
+        {
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "IT_DisableAdAccount",
+                AssignedToRole = "IT",
+                IsOffboarding = true
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "IT_DisableEmail",
+                AssignedToRole = "IT",
+                IsOffboarding = true
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "SECURITY_DeactivateBadge",
+                AssignedToRole = "Security",
+                IsOffboarding = true
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "HR_ExitInterview",
+                AssignedToRole = "HR",
+                IsOffboarding = true
+            },
+            new RequestTask
+            {
+                RequestRecordId = requestId,
+                TaskType = "MANAGER_ResponsibilityTransfer",
+                AssignedToRole = "Manager",
+                IsOffboarding = true
+            }
+        };
+    }
     
-    private List<ProvisioningTask> BuildOnboardingTasks(int requestId)
-{
-    return new List<ProvisioningTask>
+    private void CreateChecklistTasksForRequest(int requestId, bool isOffboarding)
     {
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "IT_CreateAdAccount",
-            AssignedToRole  = "IT",
-            IsOffboarding   = false
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "IT_CreateEmailAccount",
-            AssignedToRole  = "IT",
-            IsOffboarding   = false
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "IT_ProvisionLaptop",
-            AssignedToRole  = "IT",
-            IsOffboarding   = false
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "HR_WelcomeEmail",
-            AssignedToRole  = "HR",
-            IsOffboarding   = false
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "MANAGER_IntroMeeting",
-            AssignedToRole  = "Manager",
-            IsOffboarding   = false
-        }
-    };
-}
+        var templates = _db.ProvisioningTasks
+            .Where(t => t.IsTemplate
+                        && t.TaskKind == TaskKind.Checklist
+                        && t.IsOffboarding == isOffboarding)
+            .ToList();
 
-private List<ProvisioningTask> BuildOffboardingTasks(int requestId)
-{
-    return new List<ProvisioningTask>
+        var instances = templates.Select(t => new RequestTask
+        {
+            RequestRecordId   = requestId,
+            IsTemplate        = false,
+            TaskKind          = TaskKind.Checklist,
+            IsOffboarding     = t.IsOffboarding,
+            TaskType          = t.TaskType,
+            DisplayName       = t.DisplayName,
+            AssignedToRole    = t.DefaultAssignedToRole,
+            AssignedToUser    = t.DefaultAssignedToUser,
+            Status            = ProvisioningStatus.Pending,
+            CreatedAt         = DateTime.UtcNow
+        }).ToList();
+
+        if (instances.Any())
+        {
+            _db.ProvisioningTasks.AddRange(instances);
+            _db.SaveChanges();
+        }
+    }
+    
+    [HttpGet]
+    public IActionResult Tasks(int id)
     {
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "IT_DisableAdAccount",
-            AssignedToRole  = "IT",
-            IsOffboarding   = true
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "IT_DisableEmail",
-            AssignedToRole  = "IT",
-            IsOffboarding   = true
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "SECURITY_DeactivateBadge",
-            AssignedToRole  = "Security",
-            IsOffboarding   = true
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "HR_ExitInterview",
-            AssignedToRole  = "HR",
-            IsOffboarding   = true
-        },
-        new ProvisioningTask
-        {
-            RequestRecordId = requestId,
-            TaskType        = "MANAGER_ResponsibilityTransfer",
-            AssignedToRole  = "Manager",
-            IsOffboarding   = true
-        }
-    };
-}
+        var request = _db.Requests.FirstOrDefault(r => r.Id == id);
+        if (request == null)
+            return NotFound();
+        
+        var tasks = _db.ProvisioningTasks
+            .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
+            .OrderBy(t => t.Id)
+            .ToList();
 
+        ViewBag.Request = request;
+        PopulateViewBag();
+        return View(tasks);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SaveTasks(int requestId, List<int> taskId, List<string?> assignedToUser, List<string?> status)
+    {
+        // super bad binding: parallel arrays
+        for (int i = 0; i < taskId.Count; i++)
+        {
+            var id = taskId[i];
+            var task = _db.ProvisioningTasks.FirstOrDefault(t => t.Id == id);
+            if (task == null) continue;
+
+            task.AssignedToUser = string.IsNullOrWhiteSpace(assignedToUser[i])
+                ? null
+                : assignedToUser[i];
+
+            // Done is Success, anything else Pending
+            var s = (status[i] ?? "").ToLower();
+            task.Status = s == "done" ? ProvisioningStatus.Success : ProvisioningStatus.Pending;
+            task.CompletedAt = task.Status == ProvisioningStatus.Success
+                ? DateTime.UtcNow
+                : null;
+        }
+
+        _db.SaveChanges();
+
+        return RedirectToAction("Tasks", new { id = requestId });
+    }
 }

@@ -34,8 +34,7 @@
         <thead>
             <tr>
                 <th>Id</th>
-                <th>First</th>
-                <th>Last</th>
+                <th>Employee</th>
                 <th>Dept</th>
                 <th>Title</th>
                 <th>Status</th>
@@ -52,19 +51,22 @@
             <tr data-request-id="@r.Id"
                 data-first-name="@r.EmployeeFirstName"
                 data-last-name="@r.EmployeeLastName"
-                data-department="@r.DepartmentId"
-                data-title="@r.TitleId"
+                data-department="@r.DepartmentName"
+                data-title="@r.TitleDescription"
                 data-custom-title="@r.TitleDescription"
-                data-employee-type="@r.EmployeeTypeId"
-                data-supervisor="@r.HiringManagerId"
+                data-employee-type="@r.EmployeeType"
+                data-supervisor="@r.ProcessManagerName"
                 data-start-date="@r.StartDate"
                 data-termination-date="@r.TerminationDate"
                 data-rehire="@r.Rehire"
                 data-is-offboarding="@string.IsNullOrEmpty(r.StartDate)">
                 <td>@r.Id</td>
-                <td>@r.EmployeeFirstName</td>
-                <td>@r.EmployeeLastName</td>
-                <td>@r.DepartmentId</td>
+                <td>
+                    <a href="@Url.Action("Tasks", "Admin", new { id = r.Id })">
+                        @r.EmployeeFirstName @r.EmployeeLastName
+                    </a>
+                </td>
+                <td>@r.DepartmentName</td>
                 <td>@(string.IsNullOrEmpty(r.TitleDescription) ? r.TitleId.ToString() : r.TitleDescription)</td>
                 <td>@r.RequestStatus</td>
                 <td>@r.StartDate</td>
@@ -112,12 +114,10 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="department">Department <span>*</span></label>
-                            <select id="department" name="department" class="form-control selectpicker">
-                                <option value="">Select</option>
-                                <option value="1">IT</option>
-                                <option value="2">HR</option>
-                                <option value="3">Finance</option>
-                                <option value="4">Operations</option>
+                            <select id="department" name="department"
+                                    class="form-select"
+                                    asp-items="@(ViewBag.Departments as List<SelectListItem>)">
+                                <option value="">-- Select Department --</option>
                             </select>
                         </div>
                     </div>
@@ -125,12 +125,9 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="title">Title <span>*</span></label>
-                            <select id="title" name="title" class="form-control selectpicker">
-                                <option value="">Select</option>
-                                <option value="1">Developer</option>
-                                <option value="2">Analyst</option>
-                                <option value="3">Manager</option>
-                                <option value="-1">Other...</option>
+                            <select id="title" name="title" class="form-control selectpicker"
+                                asp-items="@(ViewBag.Titles as List<SelectListItem>)">
+                                <option value="">-- Select Title --</option>
                             </select>
 
                             <input type="text"
@@ -145,11 +142,18 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="employee-type">Employee Type <span>*</span></label>
-                            <select id="employee-type" name="employeeType" class="form-control selectpicker">
+                            <select id="employee-type" name="employeeType" class="form-control selectpicker"
+                                    asp-items="@(Enum.GetValues(typeof(EmployeeType))
+                                                   .Cast<EmployeeType>()
+                                                   .Select(e => new SelectListItem {
+                                                       Value = ((int)e).ToString(),
+                                                       Text  = e.ToString()
+                                                   })
+                                                   .ToList())">
                                 <option value="">Select</option>
-                                <option value="1">Full-time</option>
-                                <option value="2">Contractor</option>
-                                <option value="3">Intern</option>
+                                @* <option value="1">Full-time</option> *@
+                                @* <option value="2">Contractor</option> *@
+                                @* <option value="3">Intern</option> *@
                             </select>
                         </div>
                     </div>
@@ -157,11 +161,9 @@
                     <div class="row mt-3">
                         <div class="form-group">
                             <label for="supervisor">Hiring Manager <span>*</span></label>
-                            <select id="supervisor" name="supervisor" class="form-control selectpicker">
-                                <option value="">Select</option>
-                                <option value="101">Alice Admin</option>
-                                <option value="102">Bob Boss</option>
-                                <option value="103">Carol Chief</option>
+                            <select id="supervisor" name="supervisor" class="form-control selectpicker"
+                                asp-items="@(ViewBag.Employees as List<SelectListItem>)">
+                                <option value="">-- Select Employee --</option>
                             </select>
                         </div>
                     </div>
