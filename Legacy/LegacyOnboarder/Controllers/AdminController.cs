@@ -329,6 +329,9 @@ public class AdminController : Controller
 
     private void UpsertEmployeeFromRequest(RequestRecord employerRequest, int titleId, string? customTitle)
     {
+        if (employerRequest.RequestStatus == RequestStatus.Deleted)
+            return;
+
         var normalizedTitleId = titleId == -1 ? 0 : titleId;
 
         var employee = _db.Employees.FirstOrDefault(e =>
@@ -345,7 +348,7 @@ public class AdminController : Controller
                 EmployeeType = employerRequest.EmployeeType,
                 TitleId = normalizedTitleId,
                 TitleDescription = titleId == -1 ? customTitle : null,
-                IsOnboardingOffboarding = employerRequest.IsOffboarding
+                IsOnboardingOffboarding = true
             });
             return;
         }
@@ -354,7 +357,7 @@ public class AdminController : Controller
         employee.EmployeeType = employerRequest.EmployeeType;
         employee.TitleId = normalizedTitleId;
         employee.TitleDescription = titleId == -1 ? customTitle : null;
-        employee.IsOnboardingOffboarding = employerRequest.IsOffboarding;
+        employee.IsOnboardingOffboarding = true;
     }
 
 
