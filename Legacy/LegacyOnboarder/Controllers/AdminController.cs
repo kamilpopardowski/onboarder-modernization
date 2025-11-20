@@ -74,6 +74,7 @@ public class AdminController : Controller
             .ToList();
 
         ViewBag.Employees = _db.Employees
+            .Where(e => !e.IsOnboardingOffboarding)
             .OrderBy(e => e.EmployeeLastName)
             .ThenBy(e => e.EmployeeFirstName)
             .Select(e => new SelectListItem
