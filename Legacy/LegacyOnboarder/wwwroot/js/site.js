@@ -2,33 +2,6 @@
 
 $(document).ready(function () {
     
-    function initSelect2Lookups() {
-        if (!$.fn.select2) return; 
-
-        $('.select2-lookup').each(function () {
-            var $s = $(this);
-            
-            if ($s.hasClass('select2-hidden-accessible')) {
-                return;
-            }
-
-            var placeholder = $s.attr('title') || '';
-            
-            var $modalParent = $s.closest('.modal');
-
-            $s.select2({
-                width: '100%',
-                placeholder: placeholder,
-                allowClear: true,
-                dropdownParent: $modalParent.length ? $modalParent : $(document.body)
-            });
-        });
-    }
-    
-    $(function () {
-        initSelect2Lookups();
-    });
-
     function setSelectValue($select, value) {
         // If bootstrap-select is available and this select is a selectpicker
         if ($.fn.selectpicker && $select.hasClass('selectpicker')) {
@@ -59,6 +32,36 @@ $(document).ready(function () {
         }
         return modal;
     }
+
+    function initSelect2Lookups() {
+        // If Select2 isn’t loaded, just bail – selects stay normal
+        if (!$.fn.select2) {
+            console.warn('Select2 not loaded; .select2-lookup will not be enhanced.');
+            return;
+        }
+
+        $('.select2-lookup').each(function () {
+            var $s = $(this);
+
+            // Don’t double-init
+            if ($s.data('select2')) {
+                return;
+            }
+
+            var placeholder = $s.attr('title') || '';
+
+            // If select is inside a modal, attach dropdown there so z-index works
+            var $modalParent = $s.closest('.modal');
+
+            $s.select2({
+                width: '100%',
+                placeholder: placeholder,
+                allowClear: true,
+                dropdownParent: $modalParent.length ? $modalParent : $(document.body)
+            });
+        });
+    }
+
 
     // show/hide start vs termination date - on/off boarding
     function updateDateVisibility() {
@@ -222,4 +225,7 @@ $(document).ready(function () {
     // initial state
     updateDateVisibility();
     $('#request-type').trigger('change');
+
+    // make Department / Title / Employee Type / Supervisor searchable
+    initSelect2Lookups();
 });
