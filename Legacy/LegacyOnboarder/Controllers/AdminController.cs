@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using LegacyOnboarder.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-
 namespace LegacyOnboarder.Controllers;
 
 public class AdminController : Controller
@@ -33,7 +32,6 @@ public class AdminController : Controller
             .ToList();
 
         EnsureDefaultWorkflow(_db);
-
         PopulateViewBag();
 
         foreach (var r in requests)
@@ -47,6 +45,9 @@ public class AdminController : Controller
             r.DepartmentName = ((List<SelectListItem>)ViewBag.Departments)
                 ?.FirstOrDefault(d => int.Parse(d.Value) == r.DepartmentId)?.Text;
         }
+
+        var requestType = requests.FirstOrDefault()?.IsOffboarding ?? false;
+        ViewBag.RequestType = requestType; // true for offboarding, false for onboarding
 
         return View("Index", requests);
     }
@@ -283,7 +284,7 @@ public class AdminController : Controller
         {
             CreateChecklistTasksForRequest(requestIdForTasks, isOffboarding);
         }
-        
+
         if (employerRequest.RequestStatus != RequestStatus.Deleted)
         {
             var tasks = employerRequest.IsOffboarding
@@ -312,6 +313,7 @@ public class AdminController : Controller
                 : "Request submitted.";
         }
 
+        ViewBag.RequestType = isOffboarding;
         return BuildIndexView();
     }
 
