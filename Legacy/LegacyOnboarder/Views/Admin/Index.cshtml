@@ -118,7 +118,8 @@
                                     name="department"
                                     class="form-select select2-lookup"
                                     data-live-search="true"
-                                    title="-- Select Department --">
+                                    title=" -- Select Department --">
+                                <option></option>
                                 @if (ViewBag?.Departments != null)
                                 {
                                     @foreach (var d in ViewBag.Departments)
@@ -126,7 +127,6 @@
                                         <option value="@d.Value">@d.Text</option>
                                     }
                                 }
-        
                             </select>
                         </div>
                     </div>
@@ -138,7 +138,8 @@
                                     name="title"
                                     class="form-select select2-lookup"
                                     data-live-search="true"
-                                    title="-- Select Title --">
+                                    title=" -- Select Title --">
+                                <option></option>
                                 @if (ViewBag?.Titles != null)
                                 {
                                     @foreach (var d in ViewBag.Titles)
@@ -165,7 +166,8 @@
                                     name="employeeType"
                                     class="form-select select2-lookup"
                                     data-live-search="true"
-                                    title="-- Select Employment Type --">
+                                    title=" -- Select Employment Type --">
+                                <option></option>
                                 @if (ViewBag?.EmployeeTypes != null)
                                 {
                                     @foreach (var d in ViewBag.EmployeeTypes)
@@ -174,35 +176,8 @@
                                     }
                                 }
                             </select>
-                            @* <select id="employee-type" name="employeeType" class="form-control selectpicker" *@
-                            @*         asp-items="@(Enum.GetValues(typeof(EmployeeType)) *@
-                            @*                        .Cast<EmployeeType>() *@
-                            @*                        .Select(e => new SelectListItem *@
-                            @*                        { *@
-                            @*                            Value = ((int)e).ToString(), *@
-                            @*                            Text = e.ToString() *@
-                            @*                        }) *@
-                            @*                        .ToList())"> *@
-                            @*     <option value="">Select</option> *@
-                            @* </select> *@
                         </div>
                     </div>
-
-                    @* <div class="row mt-3"> *@
-                    @*     <div class="form-group"> *@
-                    @*         <label for="supervisor">Hiring Manager <span>*</span></label> *@
-                    @*             <select id="supervisor" *@
-                    @*                     name="supervisor" *@
-                    @*                     class="selectpicker" *@
-                    @*                     data-live-search="true" *@
-                    @*                     title="-- Select Supervisor --"> *@
-                    @*                 @foreach (var d in ViewBag.Employees) *@
-                    @*                 { *@
-                    @*                     <option value="@d.Value">@d.Text</option> *@
-                    @*                 } *@
-                    @*             </select> *@
-                    @*     </div> *@
-                    @* </div> *@
 
                     <div class="row mt-3">
                         <div class="form-group">
@@ -211,12 +186,13 @@
                                     name="supervisor"
                                     class="form-select select2-lookup"
                                     data-live-search="true"
-                                    title="-- Select Supervisor --">
-                                @if(ViewBag.Employees != null)
+                                    title=" -- Select Hiring Manager --">
+                                <option></option>
+                                @if (ViewBag.Employees != null)
                                 {
                                     @foreach (var e in ViewBag.Employees)
                                     {
-                                    <option value="@e.Value">@e.Text</option>
+                                        <option value="@e.Value">@e.Text</option>
                                     }
                                 }
                             </select>
@@ -238,8 +214,7 @@
                                    class="form-control"/>
                         </div>
                     </div>
-
-
+                    
                     <div class="row mt-3">
                         <div class="form-group">
                             <input type="checkbox" id="rehire" name="rehire" class="form-check-input"/>
