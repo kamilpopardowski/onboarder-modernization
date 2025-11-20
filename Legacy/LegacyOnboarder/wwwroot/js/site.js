@@ -1,20 +1,33 @@
 ﻿// One giant jQuery file, handling everything, forever.
 
 $(document).ready(function () {
+    
+    function initSelect2Lookups() {
+        if (!$.fn.select2) return; 
 
-    function initBootstrapSelectOnce() {
-        if (!$.fn.selectpicker) return;
-
-        $('.selectpicker').each(function () {
+        $('.select2-lookup').each(function () {
             var $s = $(this);
-            // if bs.select instance already attached, don't init again
-            if (!$s.data('bs.select')) {
-                $s.selectpicker();
+            
+            if ($s.hasClass('select2-hidden-accessible')) {
+                return;
             }
+
+            var placeholder = $s.attr('title') || '';
+            
+            var $modalParent = $s.closest('.modal');
+
+            $s.select2({
+                width: '100%',
+                placeholder: placeholder,
+                allowClear: true,
+                dropdownParent: $modalParent.length ? $modalParent : $(document.body)
+            });
         });
     }
-
-    initBootstrapSelectOnce();
+    
+    $(function () {
+        initSelect2Lookups();
+    });
 
     function setSelectValue($select, value) {
         // If bootstrap-select is available and this select is a selectpicker
@@ -55,26 +68,6 @@ $(document).ready(function () {
         $('.start-date-row').toggle(!isOff);
         $('.termination-date-row').toggle(isOff);
     }
-
-    // function clearEmployeeForm() {
-    //     $('#request-id').val('0');
-    //     $('#first-name').val('');
-    //     $('#last-name').val('');
-    //     $('#department').val('');
-    //     $('#title').val('');
-    //     $('#customTitleInput').val('').hide();
-    //     $('#employee-type').val('');
-    //     $('#supervisor').val('');
-    //     $('#start-date').val('');
-    //     $('#termination-date').val('');
-    //     $('#rehire').prop('checked', false);
-    //
-    //     // default: onboarding
-    //     //$('#request-type').val('false');
-    //     $('#employeeModalTitle').text('New Employee');
-    //
-    //     updateDateVisibility();
-    // }
 
     function clearEmployeeForm() {
         $('#request-id').val('0');
@@ -225,9 +218,6 @@ $(document).ready(function () {
         console.log('Submitting employee form with submit=' +
             $(document.activeElement).attr('value'));
     });
-
-    // Initial state if modal gets opened somehow on page load
-    //updateDateVisibility();
 
     // initial state
     updateDateVisibility();
