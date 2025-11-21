@@ -73,7 +73,20 @@ public class AdminController : Controller
             })
             .ToList();
 
-        ViewBag.Employees = _db.Employees
+        ViewBag.Employees = GetAvailableEmployees();
+
+        ViewBag.EmployeeTypes = Enum.GetValues<EmployeeType>()
+            .Select(e => new SelectListItem
+            {
+                Value = ((int)e).ToString(),
+                Text = e.ToString()
+            })
+            .ToList();
+    }
+
+    private List<SelectListItem> GetAvailableEmployees()
+    {
+        return _db.Employees
             .Where(e => e.RequestRecordId == null)
             .OrderBy(e => e.EmployeeLastName)
             .ThenBy(e => e.EmployeeFirstName)
@@ -81,14 +94,6 @@ public class AdminController : Controller
             {
                 Value = e.Id.ToString(),
                 Text = e.EmployeeFirstName + " " + e.EmployeeLastName
-            })
-            .ToList();
-
-        ViewBag.EmployeeTypes = Enum.GetValues<EmployeeType>()
-            .Select(e => new SelectListItem
-            {
-                Value = ((int)e).ToString(),
-                Text = e.ToString()
             })
             .ToList();
     }
