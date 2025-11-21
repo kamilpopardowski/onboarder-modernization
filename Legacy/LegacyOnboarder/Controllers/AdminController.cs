@@ -545,6 +545,7 @@ public class AdminController : Controller
                 : null;
         }
 
+        UpdateCompletionState(requestId);
         _db.SaveChanges();
 
         return RedirectToAction("Tasks", new { id = requestId });
@@ -564,6 +565,7 @@ public class AdminController : Controller
             ? DateTime.UtcNow
             : null;
 
+        UpdateCompletionState(task.RequestRecordId);
         _db.SaveChanges();
 
         return Json(new { ok = true });
@@ -622,5 +624,34 @@ public class AdminController : Controller
 
         TempData["Message"] = $"Request #{id} approved.";
         return RedirectToAction(nameof(FinalReview));
+    }
+
+    private void UpdateCompletionState(int? requestId)
+    {
+        if (requestId == null)
+            return;
+
+        var request = _db.Requests.FirstOrDefault(r => r.Id == requestId);
+        if (request == null)
+            return;
+
+        if (request.IsOffboarding || request.IsFinalApproved)
+        {
+            request.IsReadyForFinalReview = false;
+            return;
+        }
+
+        var tasks = _db.ProvisioningTasks
+            .Where(t => t.RequestRecordId == requestId && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
+            .ToList();
+
+        if (!tasks.Any())
+        {
+            request.IsReadyForFinalReview = false;
+            return;
+        }
+
+        var allDone = tasks.All(t => t.Status == ProvisioningStatus.Success);
+        request.IsReadyForFinalReview = allDone;
     }
 }
