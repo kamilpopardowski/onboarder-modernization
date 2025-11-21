@@ -74,7 +74,7 @@ public class AdminController : Controller
             .ToList();
 
         ViewBag.Employees = _db.Employees
-            .Where(e => !e.IsOnboardingOffboarding)
+            .Where(e => e.RequestRecordId == null)
             .OrderBy(e => e.EmployeeLastName)
             .ThenBy(e => e.EmployeeFirstName)
             .Select(e => new SelectListItem
@@ -319,6 +319,26 @@ public class AdminController : Controller
 
         ViewBag.RequestType = isOffboarding;
         return BuildIndexView();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteRequest(int id)
+    {
+        var request = _db.Requests.FirstOrDefault(r => r.Id == id);
+        if (request == null)
+            return RedirectToAction(nameof(Index));
+
+        var tasks = _db.ProvisioningTasks.Where(t => t.RequestRecordId == id).ToList();
+        if (tasks.Any())
+        {
+            _db.ProvisioningTasks.RemoveRange(tasks);
+        }
+
+        _db.Requests.Remove(request);
+        _db.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 
     private bool IsValidDate(string date)

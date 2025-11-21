@@ -84,6 +84,21 @@
                         <button class="btn btn-sm btn-secondary btn-edit-request">
                             Edit
                         </button>
+                        <form asp-action="DeleteRequest" method="post" class="d-inline ms-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@r.Id"/>
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    title="Delete request"
+                                    onclick="return confirm('Delete request #@r.Id?');">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     viewBox="0 0 16 16" aria-hidden="true">
+                                    <path d="M5.5 5.5a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5h-.5a.5.5 0 0 1-.5-.5v-6a.5.5 0 0 1 .5-.5zM8 6a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0zM10.5 5.5a.5.5 0 0 0-.5.5v6a.5.5 0 0 0 .5.5h.5a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5z"/>
+                                    <path fill-rule="evenodd"
+                                          d="M14.5 3a1 1 0 0 1-1 1H13l-1 9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2L3 4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h2.5a1 1 0 0 1 1 1zM4.118 4l.82 9.84A1 1 0 0 0 5.93 15h4.14a1 1 0 0 0 .992-.84L11.882 4zM13.5 3V2h-11v1z"/>
+                                </svg>
+                            </button>
+                        </form>
                     </td>
                 </tr>
             }
