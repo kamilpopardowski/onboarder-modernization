@@ -340,6 +340,12 @@ public class AdminController : Controller
             _db.ProvisioningTasks.RemoveRange(tasks);
         }
 
+        var employees = _db.Employees.Where(e => e.RequestRecordId == id).ToList();
+        if (employees.Any())
+        {
+            _db.Employees.RemoveRange(employees);
+        }
+
         _db.Requests.Remove(request);
         _db.SaveChanges();
 
