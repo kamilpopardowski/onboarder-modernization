@@ -324,4 +324,10 @@ $(document).ready(function () {
             modal.show();
         }
     });
+
+    // select all on final approval list
+    $('#select-all-approvals').on('change', function () {
+        var checked = $(this).is(':checked');
+        $('.approval-check').prop('checked', checked);
+    });
 });

@@ -626,6 +626,39 @@ public class AdminController : Controller
         return RedirectToAction(nameof(FinalReview));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ApproveCompletionBulk(List<int> selectedIds, string signature, bool approve)
+    {
+        if (selectedIds == null || !selectedIds.Any() || !approve || string.IsNullOrWhiteSpace(signature))
+        {
+            TempData["Error"] = "Select at least one request, confirm approval, and provide a signature.";
+            return RedirectToAction(nameof(FinalReview));
+        }
+
+        var requests = _db.Requests
+            .Where(r => selectedIds.Contains(r.Id) && r.IsReadyForFinalReview && !r.IsFinalApproved)
+            .ToList();
+
+        foreach (var request in requests)
+        {
+            request.IsFinalApproved = true;
+            request.IsReadyForFinalReview = false;
+            request.FinalApprovalSignature = signature;
+
+            var employees = _db.Employees.Where(e => e.RequestRecordId == request.Id).ToList();
+            foreach (var e in employees)
+            {
+                e.RequestRecordId = null;
+            }
+        }
+
+        _db.SaveChanges();
+
+        TempData["Message"] = $"Approved {requests.Count} request(s).";
+        return RedirectToAction(nameof(FinalReview));
+    }
+
     private void UpdateCompletionState(int? requestId)
     {
         if (requestId == null)
