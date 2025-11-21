@@ -1,6 +1,8 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
 @model List<LegacyOnboarder.Models.RequestTask>
 @{
     var request = ViewBag.Request as LegacyOnboarder.Models.RequestRecord;
+    var employees = ViewBag.Employees as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
 <h2>Checklist tasks for @request.EmployeeFirstName @request.EmployeeLastName</h2>
@@ -26,10 +28,18 @@
                     <input type="hidden" name="taskId" value="@t.Id"/>
                 </td>
                 <td>
-                    <input type="text"
-                           name="assignedToUser"
-                           class="form-control form-control-sm"
-                           value="@t.AssignedToUser"/>
+                    <select name="assignedToUser"
+                            class="form-select select2-lookup form-select-sm"
+                            title=" -- Select Employee -- ">
+                        <option></option>
+                        @foreach (var employee in employees)
+                        {
+                            <option value="@employee.Value"
+                                    selected="@(t.AssignedToUser == employee.Value ? "selected" : null)">
+                                @employee.Text
+                            </option>
+                        }
+                    </select>
                 </td>
                 <td>
                     <select name="status" class="form-control form-control-sm">

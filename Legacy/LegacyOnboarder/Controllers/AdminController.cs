@@ -74,6 +74,7 @@ public class AdminController : Controller
             .ToList();
 
         ViewBag.Employees = _db.Employees
+            .Where(e => !e.IsOnboardingOffboarding)
             .OrderBy(e => e.EmployeeLastName)
             .ThenBy(e => e.EmployeeFirstName)
             .Select(e => new SelectListItem
@@ -265,6 +266,9 @@ public class AdminController : Controller
 
         _db.SaveChanges();
 
+        UpsertEmployeeFromRequest(employerRequest, title, customTitle);
+        _db.SaveChanges();
+
         var requestIdForTasks = existing?.Id ?? employerRequest.Id;
 
         if (requestIdForTasks == 0)
@@ -321,6 +325,39 @@ public class AdminController : Controller
     {
         var pattern = @"^\d{4}-\d{2}-\d{2}$";
         return Regex.IsMatch(date, pattern);
+    }
+
+    private void UpsertEmployeeFromRequest(RequestRecord employerRequest, int titleId, string? customTitle)
+    {
+        if (employerRequest.RequestStatus == RequestStatus.Deleted)
+            return;
+
+        var normalizedTitleId = titleId == -1 ? 0 : titleId;
+
+        var employee = _db.Employees.FirstOrDefault(e =>
+            e.EmployeeFirstName == employerRequest.EmployeeFirstName &&
+            e.EmployeeLastName == employerRequest.EmployeeLastName);
+
+        if (employee == null)
+        {
+            _db.Employees.Add(new Employee
+            {
+                EmployeeFirstName = employerRequest.EmployeeFirstName,
+                EmployeeLastName = employerRequest.EmployeeLastName,
+                DepartmentId = employerRequest.DepartmentId,
+                EmployeeType = employerRequest.EmployeeType,
+                TitleId = normalizedTitleId,
+                TitleDescription = titleId == -1 ? customTitle : null,
+                IsOnboardingOffboarding = true
+            });
+            return;
+        }
+
+        employee.DepartmentId = employerRequest.DepartmentId;
+        employee.EmployeeType = employerRequest.EmployeeType;
+        employee.TitleId = normalizedTitleId;
+        employee.TitleDescription = titleId == -1 ? customTitle : null;
+        employee.IsOnboardingOffboarding = true;
     }
 
 
