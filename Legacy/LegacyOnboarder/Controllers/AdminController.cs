@@ -549,4 +549,37 @@ public class AdminController : Controller
 
         return RedirectToAction("Tasks", new { id = requestId });
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult UpdateTaskStatus(int taskId, string status)
+    {
+        var task = _db.ProvisioningTasks.FirstOrDefault(t => t.Id == taskId);
+        if (task == null)
+            return NotFound();
+
+        var s = (status ?? "").ToLower();
+        task.Status = s == "done" ? ProvisioningStatus.Success : ProvisioningStatus.Pending;
+        task.CompletedAt = task.Status == ProvisioningStatus.Success
+            ? DateTime.UtcNow
+            : null;
+
+        _db.SaveChanges();
+
+        return Json(new { ok = true });
+    }
+
+    [HttpGet]
+    public IActionResult Progress(int id)
+    {
+        var tasks = _db.ProvisioningTasks
+            .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
+            .ToList();
+
+        var total = tasks.Count;
+        var done = tasks.Count(t => t.Status == ProvisioningStatus.Success);
+        var percent = total == 0 ? 0 : (int)Math.Round(done * 100.0 / total);
+
+        return Json(new { total, done, percent });
+    }
 }

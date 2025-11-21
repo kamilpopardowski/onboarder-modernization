@@ -228,4 +228,77 @@ $(document).ready(function () {
 
     // make Department / Title / Employee Type / Supervisor searchable
     initSelect2Lookups();
+
+    // Spaghetti AJAX progress tracker
+    (function () {
+        var $trackers = $('.progress-tracker');
+        if (!$trackers.length) return;
+
+        function updateTracker($t) {
+            var id = $t.data('request-id');
+            if (!id) return;
+
+            $.ajax({
+                url: '/Admin/Progress',
+                method: 'GET',
+                data: { id: id },
+                cache: false
+            }).done(function (data) {
+                var total = data && data.total ? data.total : 0;
+                var done = data && data.done ? data.done : 0;
+                var percent = data && typeof data.percent === 'number' ? data.percent : 0;
+
+                var $bar = $t.find('.progress-bar');
+                var $label = $t.find('.progress-label');
+
+                $bar.css('width', percent + '%').attr('aria-valuenow', percent);
+                $label.text(percent + '% (' + done + '/' + total + ')');
+            }).fail(function (xhr) {
+                console.warn('Progress fetch failed for', id, xhr && xhr.status);
+            });
+        }
+
+        function refreshAllTrackers() {
+            $trackers.each(function () {
+                updateTracker($(this));
+            });
+        }
+
+        refreshAllTrackers();
+
+        setInterval(refreshAllTrackers, 15000);
+
+        $('form[action*="SaveTasks"]').on('submit', function () {
+            setTimeout(refreshAllTrackers, 1000);
+        });
+
+        // expose for other spaghetti
+        window.refreshProgressTrackers = refreshAllTrackers;
+    })();
+
+    // Instant task status updates (spaghetti edition)
+    $('#tasks-table').on('change', 'select[name="status"]', function () {
+        var $row = $(this).closest('tr');
+        var taskId = $row.find('input[name="taskId"]').val();
+        var statusVal = $(this).val();
+        var token = $('form[action*="SaveTasks"] input[name="__RequestVerificationToken"]').val();
+
+        if (!taskId) return;
+
+        $.ajax({
+            url: '/Admin/UpdateTaskStatus',
+            method: 'POST',
+            data: {
+                taskId: taskId,
+                status: statusVal,
+                __RequestVerificationToken: token
+            }
+        }).done(function () {
+            if (window.refreshProgressTrackers) {
+                window.refreshProgressTrackers();
+            }
+        }).fail(function (xhr) {
+            console.warn('Failed to update task status', taskId, xhr && xhr.status);
+        });
+    });
 });

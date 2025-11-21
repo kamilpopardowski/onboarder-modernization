@@ -57,6 +57,8 @@
                 <th>Rehire</th>
                 <th>Request Type</th>
                 <th></th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -80,11 +82,16 @@
                     <td>@r.TerminationDate</td>
                     <td>@(r.Rehire ? "Yes" : "No")</td>
                     <td>@(string.IsNullOrEmpty(r.StartDate) ? "Offboarding" : "Onboarding")</td>
-                    <td>
+                    <td class="align-middle">
+                        @await Html.PartialAsync("_ProgressTracker", r.Id)
+                    </td>
+                    <td class="align-middle">
                         <button class="btn btn-sm btn-secondary btn-edit-request">
                             Edit
                         </button>
-                        <form asp-action="DeleteRequest" method="post" class="d-inline ms-1">
+                    </td>
+                    <td class="align-middle">
+                        <form asp-action="DeleteRequest" method="post" class="m-0">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@r.Id"/>
                             <button type="submit"
