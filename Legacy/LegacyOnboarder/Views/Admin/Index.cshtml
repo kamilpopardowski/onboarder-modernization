@@ -158,6 +158,43 @@
     </table>
 </div>
 
+<!-- Final Approval Modal -->
+<div class="modal fade" id="final-approval-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Approve Completion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <strong>Employee:</strong> <span id="final-approval-employee"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>Request Type:</strong> <span id="final-approval-type"></span>
+                </div>
+                @using (Html.BeginForm("ApproveCompletion", "Admin", FormMethod.Post, new { id = "final-approval-form" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="final-approval-id" name="id" />
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="final-approval-confirm" name="approve" value="true" />
+                        <label class="form-check-label" for="final-approval-confirm">I confirm final completion</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="final-approval-signature" class="form-label">Signature</label>
+                        <input type="text" class="form-control" id="final-approval-signature" name="signature" placeholder="Enter signature" />
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Approve</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- New Employee Modal -->
 <div class="modal fade" id="modal-new-employee" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

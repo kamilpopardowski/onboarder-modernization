@@ -301,4 +301,27 @@ $(document).ready(function () {
             console.warn('Failed to update task status', taskId, xhr && xhr.status);
         });
     });
+
+    // Final approval modal
+    $('#requests-table').on('click', '.btn-approve-completion', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var $row = $btn.closest('tr');
+        var id = $row.data('request-id');
+        var first = $row.data('first-name') || '';
+        var last = $row.data('last-name') || '';
+        var isOff = String($row.data('is-offboarding') || '').toLowerCase() === 'true';
+
+        $('#final-approval-id').val(id);
+        $('#final-approval-employee').text(first + ' ' + last);
+        $('#final-approval-type').text(isOff ? 'Offboarding' : 'Onboarding');
+        $('#final-approval-confirm').prop('checked', false);
+        $('#final-approval-signature').val('');
+
+        var modalEl = document.getElementById('final-approval-modal');
+        if (modalEl) {
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    });
 });
