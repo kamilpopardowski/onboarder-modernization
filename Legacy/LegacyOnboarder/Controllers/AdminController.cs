@@ -545,6 +545,7 @@ public class AdminController : Controller
                 : null;
         }
 
+        UpdateCompletionState(requestId);
         _db.SaveChanges();
 
         return RedirectToAction("Tasks", new { id = requestId });
@@ -564,6 +565,7 @@ public class AdminController : Controller
             ? DateTime.UtcNow
             : null;
 
+        UpdateCompletionState(task.RequestRecordId);
         _db.SaveChanges();
 
         return Json(new { ok = true });
@@ -581,5 +583,108 @@ public class AdminController : Controller
         var percent = total == 0 ? 0 : (int)Math.Round(done * 100.0 / total);
 
         return Json(new { total, done, percent });
+    }
+
+    [HttpGet]
+    public IActionResult FinalReview()
+    {
+        var pending = _db.Requests
+            .Where(r => r.IsReadyForFinalReview && !r.IsFinalApproved && !r.IsOffboarding)
+            .OrderByDescending(r => r.Id)
+            .ToList();
+
+        return View("FinalReview", pending);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ApproveCompletion(int id, string signature, bool approve)
+    {
+        var request = _db.Requests.FirstOrDefault(r => r.Id == id);
+        if (request == null)
+            return NotFound();
+
+        if (!approve || string.IsNullOrWhiteSpace(signature))
+        {
+            TempData["Error"] = "Approval requires confirmation and signature.";
+            return RedirectToAction(nameof(FinalReview));
+        }
+
+        request.IsFinalApproved = true;
+        request.IsReadyForFinalReview = false;
+        request.FinalApprovalSignature = signature;
+
+        var employees = _db.Employees.Where(e => e.RequestRecordId == id).ToList();
+        foreach (var e in employees)
+        {
+            e.RequestRecordId = null;
+        }
+
+        _db.SaveChanges();
+
+        TempData["Message"] = $"Request #{id} approved.";
+        return RedirectToAction(nameof(FinalReview));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ApproveCompletionBulk(List<int> selectedIds, string signature, bool approve)
+    {
+        if (selectedIds == null || !selectedIds.Any() || !approve || string.IsNullOrWhiteSpace(signature))
+        {
+            TempData["Error"] = "Select at least one request, confirm approval, and provide a signature.";
+            return RedirectToAction(nameof(FinalReview));
+        }
+
+        var requests = _db.Requests
+            .Where(r => selectedIds.Contains(r.Id) && r.IsReadyForFinalReview && !r.IsFinalApproved)
+            .ToList();
+
+        foreach (var request in requests)
+        {
+            request.IsFinalApproved = true;
+            request.IsReadyForFinalReview = false;
+            request.FinalApprovalSignature = signature;
+
+            var employees = _db.Employees.Where(e => e.RequestRecordId == request.Id).ToList();
+            foreach (var e in employees)
+            {
+                e.RequestRecordId = null;
+            }
+        }
+
+        _db.SaveChanges();
+
+        TempData["Message"] = $"Approved {requests.Count} request(s).";
+        return RedirectToAction(nameof(FinalReview));
+    }
+
+    private void UpdateCompletionState(int? requestId)
+    {
+        if (requestId == null)
+            return;
+
+        var request = _db.Requests.FirstOrDefault(r => r.Id == requestId);
+        if (request == null)
+            return;
+
+        if (request.IsOffboarding || request.IsFinalApproved)
+        {
+            request.IsReadyForFinalReview = false;
+            return;
+        }
+
+        var tasks = _db.ProvisioningTasks
+            .Where(t => t.RequestRecordId == requestId && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
+            .ToList();
+
+        if (!tasks.Any())
+        {
+            request.IsReadyForFinalReview = false;
+            return;
+        }
+
+        var allDone = tasks.All(t => t.Status == ProvisioningStatus.Success);
+        request.IsReadyForFinalReview = allDone;
     }
 }

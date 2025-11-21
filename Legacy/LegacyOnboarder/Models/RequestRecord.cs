@@ -23,5 +23,8 @@ namespace LegacyOnboarder.Models
         public RequestStatus RequestStatus { get; set; }
         public bool IsEditing { get; set; }
         public bool IsOffboarding { get; set; }
+        public bool IsReadyForFinalReview { get; set; }
+        public bool IsFinalApproved { get; set; }
+        public string? FinalApprovalSignature { get; set; }
     }
 }

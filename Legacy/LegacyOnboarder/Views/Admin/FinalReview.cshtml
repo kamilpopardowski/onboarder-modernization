@@ -1,0 +1,79 @@
+@model IEnumerable<LegacyOnboarder.Models.RequestRecord>
+
+@{
+    ViewData["Title"] = "Final Review";
+}
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+            <h2 class="mb-0">Final Completion Review</h2>
+            <p class="text-muted mb-0">All requests awaiting final approval.</p>
+        </div>
+        <div class="badge bg-primary fs-6">@Model.Count() awaiting</div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No requests awaiting final review.</div>
+    }
+    else
+    {
+        @using (Html.BeginForm("ApproveCompletionBulk", "Admin", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <div class="table-responsive">
+                <table class="table table-striped table-sm align-middle">
+                    <thead>
+                    <tr>
+                        <th class="text-center"><input type="checkbox" id="select-all-approvals"/></th>
+                        <th>Id</th>
+                        <th>Employee</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td class="text-center">
+                                <input type="checkbox" name="selectedIds" value="@r.Id" class="approval-check" />
+                            </td>
+                            <td>@r.Id</td>
+                            <td>@r.EmployeeFirstName @r.EmployeeLastName</td>
+                            <td>@(r.IsOffboarding ? "Offboarding" : "Onboarding")</td>
+                            <td><span class="badge bg-warning text-dark">Awaiting approval</span></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="approve-bulk" name="approve" value="true" />
+                        <label class="form-check-label" for="approve-bulk">I confirm final completion for selected</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="signature-bulk" class="form-label">Signature</label>
+                    <input type="text" class="form-control" id="signature-bulk" name="signature" placeholder="Enter signature" />
+                </div>
+            </div>
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-primary">Approve selected</button>
+            </div>
+        }
+    }
+</div>
