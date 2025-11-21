@@ -5,7 +5,13 @@
     var employees = ViewBag.Employees as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
-<h2>Checklist tasks for @request.EmployeeFirstName @request.EmployeeLastName</h2>
+<div class="d-flex align-items-center justify-content-between">
+    <h2 class="mb-0">Checklist tasks for @request.EmployeeFirstName @request.EmployeeLastName</h2>
+    @if (request != null)
+    {
+        @await Html.PartialAsync("_ProgressTracker", request.Id)
+    }
+</div>
 
 <form asp-action="SaveTasks" method="post">
     <input type="hidden" name="requestId" value="@request.Id"/>
