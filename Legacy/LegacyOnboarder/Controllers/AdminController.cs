@@ -348,7 +348,7 @@ public class AdminController : Controller
                 EmployeeType = employerRequest.EmployeeType,
                 TitleId = normalizedTitleId,
                 TitleDescription = titleId == -1 ? customTitle : null,
-                IsOnboardingOffboarding = true
+                RequestRecordId = employerRequest.Id
             });
             return;
         }
@@ -357,7 +357,7 @@ public class AdminController : Controller
         employee.EmployeeType = employerRequest.EmployeeType;
         employee.TitleId = normalizedTitleId;
         employee.TitleDescription = titleId == -1 ? customTitle : null;
-        employee.IsOnboardingOffboarding = true;
+        employee.RequestRecordId = employerRequest.Id;
     }
 
 
