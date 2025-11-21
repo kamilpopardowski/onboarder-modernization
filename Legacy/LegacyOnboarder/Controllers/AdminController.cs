@@ -593,4 +593,34 @@ public class AdminController : Controller
 
         return View("FinalReview", pending);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ApproveCompletion(int id, string signature, bool approve)
+    {
+        var request = _db.Requests.FirstOrDefault(r => r.Id == id);
+        if (request == null)
+            return NotFound();
+
+        if (!approve || string.IsNullOrWhiteSpace(signature))
+        {
+            TempData["Error"] = "Approval requires confirmation and signature.";
+            return RedirectToAction(nameof(FinalReview));
+        }
+
+        request.IsFinalApproved = true;
+        request.IsReadyForFinalReview = false;
+        request.FinalApprovalSignature = signature;
+
+        var employees = _db.Employees.Where(e => e.RequestRecordId == id).ToList();
+        foreach (var e in employees)
+        {
+            e.RequestRecordId = null;
+        }
+
+        _db.SaveChanges();
+
+        TempData["Message"] = $"Request #{id} approved.";
+        return RedirectToAction(nameof(FinalReview));
+    }
 }

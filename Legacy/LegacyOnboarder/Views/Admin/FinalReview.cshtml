@@ -8,6 +8,16 @@
     <h2>Final Completion Review</h2>
     <p class="text-muted">Requests with all tasks completed and awaiting final approval.</p>
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+
     @if (!Model.Any())
     {
         <div class="alert alert-info">No requests awaiting final review.</div>
@@ -31,11 +41,16 @@
                     <td>@r.EmployeeFirstName @r.EmployeeLastName</td>
                     <td>@(r.IsOffboarding ? "Offboarding" : "Onboarding")</td>
                     <td>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" disabled />
-                            <label class="form-check-label">Ready for approval</label>
-                        </div>
-                        <input type="text" class="form-control form-control-sm mt-2" placeholder="Signature" disabled />
+                        <form asp-action="ApproveCompletion" method="post" class="d-flex flex-column gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@r.Id" />
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="approve-@r.Id" name="approve" value="true" />
+                                <label class="form-check-label" for="approve-@r.Id">I confirm final completion</label>
+                            </div>
+                            <input type="text" name="signature" class="form-control form-control-sm" placeholder="Signature" />
+                            <button class="btn btn-primary btn-sm" type="submit">Approve</button>
+                        </form>
                     </td>
                 </tr>
             }
