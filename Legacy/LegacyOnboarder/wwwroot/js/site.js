@@ -271,5 +271,34 @@ $(document).ready(function () {
         $('form[action*="SaveTasks"]').on('submit', function () {
             setTimeout(refreshAllTrackers, 1000);
         });
+
+        // expose for other spaghetti
+        window.refreshProgressTrackers = refreshAllTrackers;
     })();
+
+    // Instant task status updates (spaghetti edition)
+    $('#tasks-table').on('change', 'select[name="status"]', function () {
+        var $row = $(this).closest('tr');
+        var taskId = $row.find('input[name="taskId"]').val();
+        var statusVal = $(this).val();
+        var token = $('form[action*="SaveTasks"] input[name="__RequestVerificationToken"]').val();
+
+        if (!taskId) return;
+
+        $.ajax({
+            url: '/Admin/UpdateTaskStatus',
+            method: 'POST',
+            data: {
+                taskId: taskId,
+                status: statusVal,
+                __RequestVerificationToken: token
+            }
+        }).done(function () {
+            if (window.refreshProgressTrackers) {
+                window.refreshProgressTrackers();
+            }
+        }).fail(function (xhr) {
+            console.warn('Failed to update task status', taskId, xhr && xhr.status);
+        });
+    });
 });

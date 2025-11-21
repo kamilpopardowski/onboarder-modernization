@@ -14,9 +14,10 @@
 </div>
 
 <form asp-action="SaveTasks" method="post">
+    @Html.AntiForgeryToken()
     <input type="hidden" name="requestId" value="@request.Id"/>
 
-    <table class="table table-sm">
+    <table class="table table-sm" id="tasks-table">
         <thead>
         <tr>
             <th>Task</th>

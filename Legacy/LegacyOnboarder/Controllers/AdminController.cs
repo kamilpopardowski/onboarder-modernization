@@ -550,6 +550,25 @@ public class AdminController : Controller
         return RedirectToAction("Tasks", new { id = requestId });
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult UpdateTaskStatus(int taskId, string status)
+    {
+        var task = _db.ProvisioningTasks.FirstOrDefault(t => t.Id == taskId);
+        if (task == null)
+            return NotFound();
+
+        var s = (status ?? "").ToLower();
+        task.Status = s == "done" ? ProvisioningStatus.Success : ProvisioningStatus.Pending;
+        task.CompletedAt = task.Status == ProvisioningStatus.Success
+            ? DateTime.UtcNow
+            : null;
+
+        _db.SaveChanges();
+
+        return Json(new { ok = true });
+    }
+
     [HttpGet]
     public IActionResult Progress(int id)
     {
