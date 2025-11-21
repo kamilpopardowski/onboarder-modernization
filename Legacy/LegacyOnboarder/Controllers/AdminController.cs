@@ -582,4 +582,15 @@ public class AdminController : Controller
 
         return Json(new { total, done, percent });
     }
+
+    [HttpGet]
+    public IActionResult FinalReview()
+    {
+        var pending = _db.Requests
+            .Where(r => r.IsReadyForFinalReview && !r.IsFinalApproved && !r.IsOffboarding)
+            .OrderByDescending(r => r.Id)
+            .ToList();
+
+        return View("FinalReview", pending);
+    }
 }
