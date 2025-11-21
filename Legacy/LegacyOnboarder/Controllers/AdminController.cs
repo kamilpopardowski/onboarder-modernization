@@ -549,4 +549,18 @@ public class AdminController : Controller
 
         return RedirectToAction("Tasks", new { id = requestId });
     }
+
+    [HttpGet]
+    public IActionResult Progress(int id)
+    {
+        var tasks = _db.ProvisioningTasks
+            .Where(t => t.RequestRecordId == id && t.TaskKind == TaskKind.Checklist && !t.IsTemplate)
+            .ToList();
+
+        var total = tasks.Count;
+        var done = tasks.Count(t => t.Status == ProvisioningStatus.Success);
+        var percent = total == 0 ? 0 : (int)Math.Round(done * 100.0 / total);
+
+        return Json(new { total, done, percent });
+    }
 }
