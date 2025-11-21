@@ -13,5 +13,5 @@ public class Employee
     public int TitleId { get; set; }
     [NotMapped] public string Title { get; set; }
     public string? TitleDescription { get; set; }
-    public bool IsOnboardingOffboarding { get; set; }
+    public int? RequestRecordId { get; set; }
 }

@@ -73,22 +73,27 @@ public class AdminController : Controller
             })
             .ToList();
 
-        ViewBag.Employees = _db.Employees
-            .Where(e => !e.IsOnboardingOffboarding)
-            .OrderBy(e => e.EmployeeLastName)
-            .ThenBy(e => e.EmployeeFirstName)
-            .Select(e => new SelectListItem
-            {
-                Value = e.Id.ToString(),
-                Text = e.EmployeeFirstName + " " + e.EmployeeLastName
-            })
-            .ToList();
+        ViewBag.Employees = GetAvailableEmployees();
 
         ViewBag.EmployeeTypes = Enum.GetValues<EmployeeType>()
             .Select(e => new SelectListItem
             {
                 Value = ((int)e).ToString(),
                 Text = e.ToString()
+            })
+            .ToList();
+    }
+
+    private List<SelectListItem> GetAvailableEmployees()
+    {
+        return _db.Employees
+            .Where(e => e.RequestRecordId == null)
+            .OrderBy(e => e.EmployeeLastName)
+            .ThenBy(e => e.EmployeeFirstName)
+            .Select(e => new SelectListItem
+            {
+                Value = e.Id.ToString(),
+                Text = e.EmployeeFirstName + " " + e.EmployeeLastName
             })
             .ToList();
     }
@@ -321,6 +326,32 @@ public class AdminController : Controller
         return BuildIndexView();
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteRequest(int id)
+    {
+        var request = _db.Requests.FirstOrDefault(r => r.Id == id);
+        if (request == null)
+            return RedirectToAction(nameof(Index));
+
+        var tasks = _db.ProvisioningTasks.Where(t => t.RequestRecordId == id).ToList();
+        if (tasks.Any())
+        {
+            _db.ProvisioningTasks.RemoveRange(tasks);
+        }
+
+        var employees = _db.Employees.Where(e => e.RequestRecordId == id).ToList();
+        if (employees.Any())
+        {
+            _db.Employees.RemoveRange(employees);
+        }
+
+        _db.Requests.Remove(request);
+        _db.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
+    }
+
     private bool IsValidDate(string date)
     {
         var pattern = @"^\d{4}-\d{2}-\d{2}$";
@@ -348,7 +379,7 @@ public class AdminController : Controller
                 EmployeeType = employerRequest.EmployeeType,
                 TitleId = normalizedTitleId,
                 TitleDescription = titleId == -1 ? customTitle : null,
-                IsOnboardingOffboarding = true
+                RequestRecordId = employerRequest.Id
             });
             return;
         }
@@ -357,7 +388,7 @@ public class AdminController : Controller
         employee.EmployeeType = employerRequest.EmployeeType;
         employee.TitleId = normalizedTitleId;
         employee.TitleDescription = titleId == -1 ? customTitle : null;
-        employee.IsOnboardingOffboarding = true;
+        employee.RequestRecordId = employerRequest.Id;
     }
 
 
