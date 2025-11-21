@@ -5,8 +5,13 @@
 }
 
 <div class="container mt-4">
-    <h2>Final Completion Review</h2>
-    <p class="text-muted">Requests with all tasks completed and awaiting final approval.</p>
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <div>
+            <h2 class="mb-0">Final Completion Review</h2>
+            <p class="text-muted mb-0">All requests awaiting final approval.</p>
+        </div>
+        <div class="badge bg-primary fs-6">@Model.Count() awaiting</div>
+    </div>
 
     @if (TempData["Error"] != null)
     {
@@ -24,37 +29,32 @@
     }
     else
     {
-        <table class="table table-striped table-sm">
-            <thead>
-            <tr>
-                <th>Id</th>
-                <th>Employee</th>
-                <th>Type</th>
-                <th>Approval</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var r in Model)
-            {
+        <div class="table-responsive">
+            <table class="table table-striped table-sm align-middle">
+                <thead>
                 <tr>
-                    <td>@r.Id</td>
-                    <td>@r.EmployeeFirstName @r.EmployeeLastName</td>
-                    <td>@(r.IsOffboarding ? "Offboarding" : "Onboarding")</td>
-                    <td>
-                        <form asp-action="ApproveCompletion" method="post" class="d-flex flex-column gap-2">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@r.Id" />
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="approve-@r.Id" name="approve" value="true" />
-                                <label class="form-check-label" for="approve-@r.Id">I confirm final completion</label>
-                            </div>
-                            <input type="text" name="signature" class="form-control form-control-sm" placeholder="Signature" />
-                            <button class="btn btn-primary btn-sm" type="submit">Approve</button>
-                        </form>
-                    </td>
+                    <th class="text-center">Select</th>
+                    <th>Id</th>
+                    <th>Employee</th>
+                    <th>Type</th>
+                    <th>Status</th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td class="text-center">
+                            <input type="checkbox" disabled />
+                        </td>
+                        <td>@r.Id</td>
+                        <td>@r.EmployeeFirstName @r.EmployeeLastName</td>
+                        <td>@(r.IsOffboarding ? "Offboarding" : "Onboarding")</td>
+                        <td><span class="badge bg-warning text-dark">Awaiting approval</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
 </div>
