@@ -1,0 +1,12 @@
+{
+  "Prompts": [
+    {
+      "command": ">b ::task name::",
+      "action": "create a new branch using: git checkout -b ONOFF-::task-name:: — where ::task-name:: is whatever follows the command"
+    },
+    {
+      "command": ">PR",
+      "action": "create and open a PR using this workflow: 1) switch to main 2) git pull 3) switch back to the feature branch 4) rebase with main 5) allow me to resolve conflicts 6) after conflicts resolved or if none exist: git push --force 7) create and open the pull request"
+    }
+  ]
+}
