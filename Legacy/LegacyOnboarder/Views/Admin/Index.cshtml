@@ -47,7 +47,10 @@
     <table class="table table-striped table-sm" id="requests-table">
         <thead>
             <tr>
-                <th>Id</th>
+                @{
+                    var completionLabel = isOffboarding ? "Offboarded" : "Onboarded";
+                }
+                <th class="text-center">@completionLabel</th>
                 <th>Employee</th>
                 <th>Dept</th>
                 <th>Title</th>
@@ -69,7 +72,17 @@
                     data-employee-type="@((int)r.EmployeeType)" data-supervisor="@r.ProcessManagerId"
                     data-start-date="@r.StartDate" data-termination-date="@r.TerminationDate" data-rehire="@r.Rehire"
                     data-is-offboarding="@string.IsNullOrEmpty(r.StartDate)">
-                    <td>@r.Id</td>
+                    <td class="text-center align-middle">
+                        <a class="btn btn-link p-0 final-approval-link"
+                           href="@Url.Action("FinalReview", "Admin")"
+                           title="Open final review page">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/>
+                                <path d="M7.002 11a1 1 0 1 0 2 0 1 1 0 0 0-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.5a.555.555 0 0 1-1.1 0z"/>
+                            </svg>
+                        </a>
+                    </td>
                     <td>
                         <a href="@Url.Action("Tasks", "Admin", new { id = r.Id })">
                             @r.EmployeeFirstName @r.EmployeeLastName
